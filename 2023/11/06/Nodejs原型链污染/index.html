@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言近期的 CTF 中 Nodejs 原型链污染频频出现，写篇文章记录一下入门的学习过程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nodejs原型链污染">
+<meta property="og:url" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/index.html">
+<meta property="og:site_name" content="YDJ&#39;s_Bl0g">
+<meta property="og:description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言近期的 CTF 中 Nodejs 原型链污染频频出现，写篇文章记录一下入门的学习过程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403992-18.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403989-1.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-2.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-3.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-4.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-5.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-6.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-7.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-8.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-9.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-10.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-11.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-12.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-13.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-14.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-15.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-16.png">
+<meta property="og:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-17.png">
+<meta property="article:published_time" content="2023-11-05T21:05:34.000Z">
+<meta property="article:modified_time" content="2023-11-05T21:07:34.588Z">
+<meta property="article:author" content="YDJ">
+<meta property="article:tag" content="Nodejs原型链污染">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403992-18.png">
+
+<link rel="canonical" href="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Nodejs原型链污染 | YDJ's_Bl0g</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">YDJ's_Bl0g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="YDJ">
+      <meta itemprop="description" content="我这一生，如履薄冰">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YDJ's_Bl0g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Nodejs原型链污染
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-11-06 05:05:34 / 修改时间：05:07:34" itemprop="dateCreated datePublished" datetime="2023-11-06T05:05:34+08:00">2023-11-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。</p>
+<h1 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h1><p>近期的 CTF 中 Nodejs 原型链污染频频出现，写篇文章记录一下入门的学习过程</p>
+<span id="more"></span>
+
+<h1 id="0x01-基础知识"><a href="#0x01-基础知识" class="headerlink" title="0x01 基础知识"></a>0x01 基础知识</h1><h3 id="1-1-js-对象"><a href="#1-1-js-对象" class="headerlink" title="1.1 js 对象"></a>1.1 js 对象</h3><ul>
+<li>键值对的集合，键有称为对象的属性名，值又称为对象的属性值</li>
+</ul>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403992-18.png" alt="img"></p>
+<h3 id="1-2-js-类"><a href="#1-2-js-类" class="headerlink" title="1.2 js 类"></a>1.2 js 类</h3><ul>
+<li>在 js 中，类可以使用“构造函数”的形式来定义，然后通过 new 来实例化为对象</li>
+</ul>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403989-1.png" alt="img"></p>
+<h3 id="1-3-原型-prototype-和-proto"><a href="#1-3-原型-prototype-和-proto" class="headerlink" title="1.3 原型 prototype 和 proto"></a>1.3 原型 <strong>prototype 和 <strong>proto</strong></strong></h3><p>在 js 中，原型（prototype）是一种对象，它充当其他对象的模板。每个 js 对象都有一个原型，可以通过 <strong>proto</strong> 属性访问。通过原型对象可以实现属性和方法的共享、动态改变对象的属性和方法等，下面是一个简单的例子：</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-2.png" alt="img"></p>
+<p>在上述代码中，User.prototype 对象被添加了一个 func 方法，实例化的 User 对象（u）会继承 User.prototype 上的 func 方法，使我们在所有实例化的对象中共享同一个方法，避免了重复创建</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-3.png" alt="img"></p>
+<p>从 u 对象的原型中我们也可以看到被定义的 func 函数</p>
+<p>prototype 和 __proto__的用法区别：</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-4.png" alt="img"></p>
+<p>也就是说，一个类实例化出来的对象，可以通过 <strong>proto</strong> 属性来访问该类的原型（prototype）</p>
+<h3 id="1-4-原型链继承"><a href="#1-4-原型链继承" class="headerlink" title="1.4 原型链继承"></a>1.4 原型链继承</h3><p>承接 1.3 的内容，对象 u 在调用 func 函数的时候，实际上 js 引擎会进行如下操作:</p>
+<p>在对象 u 中寻找 func —&gt; 如果找不到，则在 u.__proto__中寻找 fun —&gt; 如果仍然找不到，则继续在u.<strong>proto</strong>.__proto__中寻找func —&gt; 依次寻找，直到找到null结束（Object 类的原型 Object.prototype 的 <strong>proto</strong> 就是null）</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-5.png" alt="img"></p>
+<p>这就是原型链的继承</p>
+<h1 id="0x02-攻击方式"><a href="#0x02-攻击方式" class="headerlink" title="0x02 攻击方式"></a>0x02 攻击方式</h1><h3 id="2-1-漏洞原理"><a href="#2-1-漏洞原理" class="headerlink" title="2.1 漏洞原理"></a>2.1 漏洞原理</h3><p>先来做一个演示：</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-6.png" alt="img"></p>
+<p>结合我们前面提到的基础知识，我们很容易理解这个过程。先是创建一个 User1 对象（本质是 Object 类的实例化对象），对象中有 name 属性和对应值，然后我们尝试修改 User1 的原型 User1.<strong>proto</strong> （本质是 Object 类），给它增加一个 name 属性，值为 admin，然后我们访问 User1 中的 name 属性，根据原型链的继承原创，User1 首先在自身寻找 name 属性，所以值还是 ydj。而当我们再创建一个不含 name 属性的 User2 对象时，访问该对象的 name 属性，虽然 User2 本身没有，但是它继承了原型（Object类）的属性，所以最终得到 User2.name 的值为 admin，这就是原型链污染攻击</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-7.png" alt="img"></p>
+<h3 id="2-2-触发条件"><a href="#2-2-触发条件" class="headerlink" title="2.2 触发条件"></a>2.2 触发条件</h3><p>原型链污染需要我们修改 <strong>proto</strong> 的值，所以我们只需要找到能够操作对象的键的行为就可以了，下面举两个常见的例子</p>
+<ul>
+<li>merge</li>
+</ul>
+<p>merge 函数接受一个目标对象和任意数量的源对象。它会将源对象中的键值对递归地合并到目标对象中</p>
+<p>示例代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">merge</span>(<span class="params">target, ...sources</span>) &#123;</span><br><span class="line">  sources.<span class="title function_">forEach</span>(<span class="function"><span class="params">source</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="title class_">Object</span>.<span class="title function_">keys</span>(source).<span class="title function_">forEach</span>(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (source[key] <span class="keyword">instanceof</span> <span class="title class_">Object</span> &amp;&amp; key <span class="keyword">in</span> target) &#123;</span><br><span class="line">        <span class="title function_">merge</span>(target[key], source[key]);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        target[key] = source[key];</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">return</span> target;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-8.png" alt="img"></p>
+<p>我们之所以关注 merge 函数，是因为在函数的实现过程中出现了赋值操作 target[key] &#x3D; source[key]，如果将 key 换成 <strong>proto</strong> 是不是就可以完成原型链污染了呢，我们不妨直接试一下</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-9.png" alt="img"></p>
+<p>从结果来看，merge 合并成功但是原型链没有污染成功</p>
+<p>实际上，<strong>proto</strong> 在上述代码中已经被认为是 source 对象的原型，所以该操作只能污染 source 对象的原型而不是 Object 类的原型，如下：</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-10.png" alt="img"></p>
+<p>（关于这里的两个 object 原型我没太搞懂，个人感觉前者是 source 的直接原型，后者才是所有 object 类的实例化对象的共同原型，要污染到后者才能达成原型链污染攻击）</p>
+<p>所以这时候我们需要借助 JSON.parse 方法：当使用 JSON.parse 解析 JSON 字符串时，JavaScript 引擎会自动阻止对原型链的修改</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-11.png" alt="img"></p>
+<p>此时 Object 的原型已经成功被污染（这里要注意 json 格式的属性名要加引号，否则会发生如图的报错）</p>
+<p>而我个人的理解是 <strong>proto</strong> 在 source 中是以json字符串的形式存在的，当经过 merge 方法合并到 target 中才会被解释成 target 的原型，从而造成污染</p>
+<p>merge 在很多常见库中都存在，是最常见的能够操作对象中键的操作，所以也最容易出现原型链污染攻击</p>
+<ul>
+<li>clone</li>
+</ul>
+<p>clone 函数接受一个对象，并返回该对象的深拷贝副本</p>
+<p>示例代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">clone</span>(<span class="params">obj</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (obj === <span class="literal">null</span> || <span class="keyword">typeof</span> obj !== <span class="string">&#x27;object&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">let</span> result = <span class="title class_">Array</span>.<span class="title function_">isArray</span>(obj) ? [] : &#123;&#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> obj) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title class_">Object</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">hasOwnProperty</span>.<span class="title function_">call</span>(obj, key)) &#123;</span><br><span class="line">      result[key] = <span class="title function_">clone</span>(obj[key]);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403990-12.png" alt="img"></p>
+<p>污染方法和 merge 类似（因为 clone 的底层其实就是将源对象 merge 到一个空对象中）</p>
+<h1 id="0x03-CTF-例题"><a href="#0x03-CTF-例题" class="headerlink" title="0x03 CTF 例题"></a>0x03 CTF 例题</h1><h3 id="CATCTF2022-wife-wife"><a href="#CATCTF2022-wife-wife" class="headerlink" title="[CATCTF2022]wife_wife"></a>[CATCTF2022]wife_wife</h3><p>github 上找到源码进行分析（比赛时是黑盒），重点在 register 路由</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">app.<span class="title function_">post</span>(<span class="string">&#x27;/register&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> user = <span class="title class_">JSON</span>.<span class="title function_">parse</span>(req.<span class="property">body</span>)</span><br><span class="line">    <span class="keyword">if</span> (!user.<span class="property">username</span> || !user.<span class="property">password</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">json</span>(&#123; <span class="attr">msg</span>: <span class="string">&#x27;empty username or password&#x27;</span>, <span class="attr">err</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (users.<span class="title function_">filter</span>(<span class="function"><span class="params">u</span> =&gt;</span> u.<span class="property">username</span> == user.<span class="property">username</span>).<span class="property">length</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">json</span>(&#123; <span class="attr">msg</span>: <span class="string">&#x27;username already exists&#x27;</span>, <span class="attr">err</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (user.<span class="property">isAdmin</span> &amp;&amp; user.<span class="property">inviteCode</span> != <span class="variable constant_">INVITE_CODE</span>) &#123;</span><br><span class="line">        user.<span class="property">isAdmin</span> = <span class="literal">false</span></span><br><span class="line">        <span class="keyword">return</span> res.<span class="title function_">json</span>(&#123; <span class="attr">msg</span>: <span class="string">&#x27;invalid invite code&#x27;</span>, <span class="attr">err</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">let</span> newUser = <span class="title class_">Object</span>.<span class="title function_">assign</span>(&#123;&#125;, baseUser, user)</span><br><span class="line">    users.<span class="title function_">push</span>(newUser)</span><br><span class="line">    res.<span class="title function_">json</span>(&#123; <span class="attr">msg</span>: <span class="string">&#x27;user created successfully&#x27;</span>, <span class="attr">err</span>: <span class="literal">false</span> &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>我们关注 Object.assign 方法</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-13.png" alt="img"></p>
+<p>类似于上面提到的 merge（题目也自带了 JSON.parse 解析）</p>
+<p>根据抓包信息，我们大致可以判断出 flag 界面需要鉴权（user.isAdmin &#x3D; true），但是我们并不知道邀请码，所以我们可以借助 Object.assign 方法在注册普通用户的同时污染原型链，也就是给解析出来的 user 对象的原型中增加 isAdmin 属性并且值为 true，这样就可以跳过邀请码验证这一步骤</p>
+<p>在控制台做个演示：</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-14.png" alt="img"></p>
+<p>所以只要将原本注册的请求体</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-15.png" alt="img"></p>
+<p>改成我们的 payload 就可以了</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-16.png" alt="img"></p>
+<p>最后正常登录即可看到 flag</p>
+<p><img src="/2023/11/06/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/1699218403991-17.png" alt="img"></p>
+<h1 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h1><p>本文为学习记录文章，就原型链污染攻击的入门分享了一些个人拙见，技术细节难免有不足或者模糊不清之处，还请师傅们多多指教</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Nodejs%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93/" rel="tag"># Nodejs原型链污染</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/" rel="prev" title="LaTex注入">
+      <i class="fa fa-chevron-left"></i> LaTex注入
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/11/06/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8BURLDNS%E4%BB%8E0%E5%88%B01/" rel="next" title="Java反序列化之URLDNS从0到1">
+      Java反序列化之URLDNS从0到1 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">0x00 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">2.</span> <span class="nav-text">0x01 基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-js-%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.0.1.</span> <span class="nav-text">1.1 js 对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-js-%E7%B1%BB"><span class="nav-number">2.0.2.</span> <span class="nav-text">1.2 js 类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-%E5%8E%9F%E5%9E%8B-prototype-%E5%92%8C-proto"><span class="nav-number">2.0.3.</span> <span class="nav-text">1.3 原型 prototype 和 proto</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-%E5%8E%9F%E5%9E%8B%E9%93%BE%E7%BB%A7%E6%89%BF"><span class="nav-number">2.0.4.</span> <span class="nav-text">1.4 原型链继承</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02-%E6%94%BB%E5%87%BB%E6%96%B9%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">0x02 攻击方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86"><span class="nav-number">3.0.1.</span> <span class="nav-text">2.1 漏洞原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E8%A7%A6%E5%8F%91%E6%9D%A1%E4%BB%B6"><span class="nav-number">3.0.2.</span> <span class="nav-text">2.2 触发条件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03-CTF-%E4%BE%8B%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">0x03 CTF 例题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CATCTF2022-wife-wife"><span class="nav-number">4.0.1.</span> <span class="nav-text">[CATCTF2022]wife_wife</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">0x04 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YDJ"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">YDJ</p>
+  <div class="site-description" itemprop="description">我这一生，如履薄冰</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">发布</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YDJ</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">22k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:12</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

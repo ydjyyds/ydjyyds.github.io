@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言最近在一个新生赛中遇到了这样一个考点，感觉蛮有意思的，记录一下解决过程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="preg_replace函数在&#x2F;e修饰符下的代码执行漏洞">
+<meta property="og:url" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:site_name" content="YDJ&#39;s_Bl0g">
+<meta property="og:description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言最近在一个新生赛中遇到了这样一个考点，感觉蛮有意思的，记录一下解决过程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/2.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/3.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/4.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/5.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/6.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/7.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/8.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/9.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/10.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/11.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/12.PNG">
+<meta property="article:published_time" content="2023-11-05T17:52:10.000Z">
+<meta property="article:modified_time" content="2023-11-05T18:51:54.090Z">
+<meta property="article:author" content="YDJ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.PNG">
+
+<link rel="canonical" href="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>preg_replace函数在/e修饰符下的代码执行漏洞 | YDJ's_Bl0g</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">YDJ's_Bl0g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="YDJ">
+      <meta itemprop="description" content="我这一生，如履薄冰">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YDJ's_Bl0g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          preg_replace函数在/e修饰符下的代码执行漏洞
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-11-06 01:52:10 / 修改时间：02:51:54" itemprop="dateCreated datePublished" datetime="2023-11-06T01:52:10+08:00">2023-11-06</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>984</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。</p>
+<h1 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a><strong>0x00 前言</strong></h1><p>最近在一个新生赛中遇到了这样一个考点，感觉蛮有意思的，记录一下解决过程<span id="more"></span></p>
+<h1 id="0x01-漏洞成因"><a href="#0x01-漏洞成因" class="headerlink" title="0x01 漏洞成因"></a>0x01 漏洞成因</h1><p>先来看一下<code>preg_replace</code>函数的语法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">mixed</span> <span class="title function_ invoke__">preg_replace</span> ( <span class="keyword">mixed</span> <span class="variable">$pattern</span> , <span class="keyword">mixed</span> <span class="variable">$replacement</span> , <span class="keyword">mixed</span> <span class="variable">$subject</span> [, <span class="keyword">int</span> <span class="variable">$limit</span> = -<span class="number">1</span> [, <span class="keyword">int</span> &amp;<span class="variable">$count</span> ]] )</span><br></pre></td></tr></table></figure>
+
+<p>平时我们经常用它来做一些字符的替换</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="variable">$str</span> = <span class="string">&#x27;aaBbcc&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="variable">$str</span> = <span class="title function_ invoke__">preg_replace</span>(<span class="string">&#x27;/bb/i&#x27;</span>, <span class="string">&#x27;dd&#x27;</span>, <span class="variable">$str</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$str</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.PNG" alt="img"></p>
+<p><code>pattern</code>参数支持正则表达式，而在PHP中正则表达式的<code>/e</code>修饰符会使<code>preg_replace</code>在成功匹配的情况下将中间的<code>replacement</code>参数当作PHP代码执行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="title function_ invoke__">preg_replace</span>(<span class="string">&#x27;/ydj/e&#x27;</span>,<span class="string">&#x27;phpinfo()&#x27;</span>, <span class="string">&#x27;ydj666&#x27;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/2.PNG" alt="img"></p>
+<p>值得一提的是，PHP7已经修复了这个问题</p>
+<h1 id="0x02-漏洞利用"><a href="#0x02-漏洞利用" class="headerlink" title="0x02 漏洞利用"></a>0x02 漏洞利用</h1><p>先来看看题目给出的代码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;code&#x27;</span>]) &amp;&amp; <span class="keyword">isset</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;pattern&#x27;</span>]))</span><br><span class="line">&#123;</span><br><span class="line">    <span class="variable">$pattern</span>=<span class="variable">$_POST</span>[<span class="string">&#x27;pattern&#x27;</span>];</span><br><span class="line">    <span class="keyword">if</span>(!<span class="title function_ invoke__">preg_match</span>(<span class="string">&quot;/flag|system|pass|cat|chr|ls|[0-9]|tac|nl|od|ini_set|eval|exec|dir|\.|\`|read*|show|file|\&lt;|popen|pcntl|var_dump|print|var_export|echo|implode|print_r|getcwd|head|more|less|tail|vi|sort|uniq|sh|include|require|scandir|\/| |\?|mv|cp|next|show_source|highlight_file|glob|\~|\^|\||\&amp;|\*|\%/i&quot;</span>,<span class="variable">$code</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="variable">$code</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;code&#x27;</span>];</span><br><span class="line">        <span class="title function_ invoke__">preg_replace</span>(<span class="string">&#x27;/(&#x27;</span> . <span class="variable">$pattern</span> . <span class="string">&#x27;)/ei&#x27;</span>,<span class="string">&#x27;print_r(&quot;\\1&quot;)&#x27;</span>, <span class="variable">$code</span>);</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;you are smart&quot;</span>;</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;try again&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="keyword">die</span>(<span class="string">&quot;it is begin&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>preg_replace</code>函数使用了<code>/e</code>修饰符，符合代码执行的条件，但是第二个参数却是一段固定的代码，咋一看好像无法利用。但是我们发现了该参数中的<code>\\1</code>看起来有点奇怪，当我们尝试着去匹配一些字符串的时候该参数代码执行的结果却是打印出我们匹配到的字符</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/3.PNG" alt="img"></p>
+<p>带着疑问去百度了一下，终于在<a target="_blank" rel="noopener" href="https://www.w3cschool.cn/zhengzebiaodashi/regexp-syntax.html">w3cschool</a>中找到了答案</p>
+<blockquote>
+<p>反向引用：</p>
+<p>对一个正则表达式模式或部分模式两边添加<strong>圆括号</strong>将导致相关匹配存储到一个临时缓冲区中，所捕获的每个子匹配都按照在正则表达式模式中从左到右出现的顺序存储。缓冲区编号从 1 开始，最多可存储 99 个捕获的子表达式。每个缓冲区都可以使用 ‘\n’ 访问，其中 n 为一个标识特定缓冲区的一位或两位十进制数。</p>
+<p>所以 \1 指定第一个子匹配项</p>
+</blockquote>
+<p>观察题目，我们可以发现正则表达式的部分确实加上了圆括号</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/4.PNG" alt="img"></p>
+<p>这就意味着第二个参数也存在着我们可控的地方，但是<code>\1</code>是被当成字符串来操作的，有没有办法可以让字符串的内容也可以代码执行呢？继续查找资料，发现了PHP中有一个叫<a target="_blank" rel="noopener" href="https://www.php.net/manual/zh/language.variables.variable.php">可变变量</a>的东西<code>$&#123;&#125;</code>，类似于Linux中<code>$()</code>的用法，</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/5.PNG" alt="img"></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;$&#123;phpinfo()&#125;&quot;</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/6.PNG" alt="img"></p>
+<p>也就是说，<code>$&#123;phpinfo()&#125;</code>中的<code>phpinfo()</code>会被当做变量先执行而且只能适用于双引号字符串，单引号不行</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/7.PNG" alt="img"></p>
+<p>还好题目恰好是双引号字符串，符合条件，所以现在代码执行的问题也解决了，剩下的就是想办法让参数一的正则表达式能够成功匹配到我们想要匹配的字符<code>&quot;$&#123;phpinfo()&#125;&quot;</code>，这里我们选择常见的<code>.*</code>（匹配任何字符（包括换行符）零个或多个），最后去题目传参</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/8.PNG" alt="img"></p>
+<p>成功执行phpinfo找到flag</p>
+<h1 id="0x03-漏洞防御"><a href="#0x03-漏洞防御" class="headerlink" title="0x03 漏洞防御"></a>0x03 漏洞防御</h1><ul>
+<li>使用安全的函数<code>preg_replace_callback</code>，在报错中也可以看到官方给出的告警</li>
+</ul>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/9.PNG" alt="img"></p>
+<ul>
+<li>选择单引号闭合</li>
+</ul>
+<p>双引号</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/10.PNG" alt="img"></p>
+<p>单引号</p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/11.PNG" alt="img"></p>
+<ul>
+<li>正则表达式不加括号（不捕获）</li>
+</ul>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/12.PNG" alt="img"></p>
+<h1 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h1><p>该漏洞点比较简单，但是还是很值得分析一下的，其实我们可以发现许多漏洞的产生往往发生在一些比较方便的功能上，怪不得圈内总是流传着这么一句话：PHP是世界上最好的语言</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/05/%E6%88%91%E4%B8%8E%E7%BD%91%E5%AE%89/" rel="prev" title="我与网安">
+      <i class="fa fa-chevron-left"></i> 我与网安
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">0x00 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01-%E6%BC%8F%E6%B4%9E%E6%88%90%E5%9B%A0"><span class="nav-number">2.</span> <span class="nav-text">0x01 漏洞成因</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02-%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">0x02 漏洞利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03-%E6%BC%8F%E6%B4%9E%E9%98%B2%E5%BE%A1"><span class="nav-number">4.</span> <span class="nav-text">0x03 漏洞防御</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">0x04 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YDJ"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">YDJ</p>
+  <div class="site-description" itemprop="description">我这一生，如履薄冰</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">发布</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YDJ</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">4k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">14 分钟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

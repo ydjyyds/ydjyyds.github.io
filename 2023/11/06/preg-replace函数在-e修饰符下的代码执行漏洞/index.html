@@ -27,23 +27,23 @@
 <meta property="og:site_name" content="YDJ&#39;s_Bl0g">
 <meta property="og:description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言最近在一个新生赛中遇到了这样一个考点，感觉蛮有意思的，记录一下解决过程">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/2.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/3.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/4.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/5.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/6.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/7.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/8.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/9.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/10.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/11.PNG">
-<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/12.PNG">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/2.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/3.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/4.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/5.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/6.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/7.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/8.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/9.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/10.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/11.png">
+<meta property="og:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/12.png">
 <meta property="article:published_time" content="2023-11-05T17:52:10.000Z">
-<meta property="article:modified_time" content="2023-11-05T18:51:54.090Z">
+<meta property="article:modified_time" content="2023-11-05T19:50:52.270Z">
 <meta property="article:author" content="YDJ">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.PNG">
+<meta name="twitter:image" content="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.png">
 
 <link rel="canonical" href="http://example.com/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/">
 
@@ -226,7 +226,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2023-11-06 01:52:10 / 修改时间：02:51:54" itemprop="dateCreated datePublished" datetime="2023-11-06T01:52:10+08:00">2023-11-06</time>
+              <time title="创建时间：2023-11-06 01:52:10 / 修改时间：03:50:52" itemprop="dateCreated datePublished" datetime="2023-11-06T01:52:10+08:00">2023-11-06</time>
             </span>
 
           
@@ -269,17 +269,17 @@
 <p>平时我们经常用它来做一些字符的替换</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="variable">$str</span> = <span class="string">&#x27;aaBbcc&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="variable">$str</span> = <span class="title function_ invoke__">preg_replace</span>(<span class="string">&#x27;/bb/i&#x27;</span>, <span class="string">&#x27;dd&#x27;</span>, <span class="variable">$str</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$str</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/1.png" alt="img"></p>
 <p><code>pattern</code>参数支持正则表达式，而在PHP中正则表达式的<code>/e</code>修饰符会使<code>preg_replace</code>在成功匹配的情况下将中间的<code>replacement</code>参数当作PHP代码执行</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="title function_ invoke__">preg_replace</span>(<span class="string">&#x27;/ydj/e&#x27;</span>,<span class="string">&#x27;phpinfo()&#x27;</span>, <span class="string">&#x27;ydj666&#x27;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/2.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/2.png" alt="img"></p>
 <p>值得一提的是，PHP7已经修复了这个问题</p>
 <h1 id="0x02-漏洞利用"><a href="#0x02-漏洞利用" class="headerlink" title="0x02 漏洞利用"></a>0x02 漏洞利用</h1><p>先来看看题目给出的代码</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;code&#x27;</span>]) &amp;&amp; <span class="keyword">isset</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;pattern&#x27;</span>]))</span><br><span class="line">&#123;</span><br><span class="line">    <span class="variable">$pattern</span>=<span class="variable">$_POST</span>[<span class="string">&#x27;pattern&#x27;</span>];</span><br><span class="line">    <span class="keyword">if</span>(!<span class="title function_ invoke__">preg_match</span>(<span class="string">&quot;/flag|system|pass|cat|chr|ls|[0-9]|tac|nl|od|ini_set|eval|exec|dir|\.|\`|read*|show|file|\&lt;|popen|pcntl|var_dump|print|var_export|echo|implode|print_r|getcwd|head|more|less|tail|vi|sort|uniq|sh|include|require|scandir|\/| |\?|mv|cp|next|show_source|highlight_file|glob|\~|\^|\||\&amp;|\*|\%/i&quot;</span>,<span class="variable">$code</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="variable">$code</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;code&#x27;</span>];</span><br><span class="line">        <span class="title function_ invoke__">preg_replace</span>(<span class="string">&#x27;/(&#x27;</span> . <span class="variable">$pattern</span> . <span class="string">&#x27;)/ei&#x27;</span>,<span class="string">&#x27;print_r(&quot;\\1&quot;)&#x27;</span>, <span class="variable">$code</span>);</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;you are smart&quot;</span>;</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">&quot;try again&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="keyword">die</span>(<span class="string">&quot;it is begin&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
 <p>可以看到<code>preg_replace</code>函数使用了<code>/e</code>修饰符，符合代码执行的条件，但是第二个参数却是一段固定的代码，咋一看好像无法利用。但是我们发现了该参数中的<code>\\1</code>看起来有点奇怪，当我们尝试着去匹配一些字符串的时候该参数代码执行的结果却是打印出我们匹配到的字符</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/3.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/3.png" alt="img"></p>
 <p>带着疑问去百度了一下，终于在<a target="_blank" rel="noopener" href="https://www.w3cschool.cn/zhengzebiaodashi/regexp-syntax.html">w3cschool</a>中找到了答案</p>
 <blockquote>
 <p>反向引用：</p>
@@ -287,32 +287,32 @@
 <p>所以 \1 指定第一个子匹配项</p>
 </blockquote>
 <p>观察题目，我们可以发现正则表达式的部分确实加上了圆括号</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/4.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/4.png" alt="img"></p>
 <p>这就意味着第二个参数也存在着我们可控的地方，但是<code>\1</code>是被当成字符串来操作的，有没有办法可以让字符串的内容也可以代码执行呢？继续查找资料，发现了PHP中有一个叫<a target="_blank" rel="noopener" href="https://www.php.net/manual/zh/language.variables.variable.php">可变变量</a>的东西<code>$&#123;&#125;</code>，类似于Linux中<code>$()</code>的用法，</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/5.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/5.png" alt="img"></p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;$&#123;phpinfo()&#125;&quot;</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/6.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/6.png" alt="img"></p>
 <p>也就是说，<code>$&#123;phpinfo()&#125;</code>中的<code>phpinfo()</code>会被当做变量先执行而且只能适用于双引号字符串，单引号不行</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/7.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/7.png" alt="img"></p>
 <p>还好题目恰好是双引号字符串，符合条件，所以现在代码执行的问题也解决了，剩下的就是想办法让参数一的正则表达式能够成功匹配到我们想要匹配的字符<code>&quot;$&#123;phpinfo()&#125;&quot;</code>，这里我们选择常见的<code>.*</code>（匹配任何字符（包括换行符）零个或多个），最后去题目传参</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/8.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/8.png" alt="img"></p>
 <p>成功执行phpinfo找到flag</p>
 <h1 id="0x03-漏洞防御"><a href="#0x03-漏洞防御" class="headerlink" title="0x03 漏洞防御"></a>0x03 漏洞防御</h1><ul>
 <li>使用安全的函数<code>preg_replace_callback</code>，在报错中也可以看到官方给出的告警</li>
 </ul>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/9.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/9.png" alt="img"></p>
 <ul>
 <li>选择单引号闭合</li>
 </ul>
 <p>双引号</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/10.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/10.png" alt="img"></p>
 <p>单引号</p>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/11.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/11.png" alt="img"></p>
 <ul>
 <li>正则表达式不加括号（不捕获）</li>
 </ul>
-<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/12.PNG" alt="img"></p>
+<p><img src="/2023/11/06/preg-replace%E5%87%BD%E6%95%B0%E5%9C%A8-e%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/12.png" alt="img"></p>
 <h1 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h1><p>该漏洞点比较简单，但是还是很值得分析一下的，其实我们可以发现许多漏洞的产生往往发生在一些比较方便的功能上，怪不得圈内总是流传着这么一句话：PHP是世界上最好的语言</p>
 
     </div>

